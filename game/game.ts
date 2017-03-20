@@ -1,4 +1,7 @@
 import GameState from "gamestate";
 
-var s = new GameState;
+let state = new GameState;
+state.reset();
+setInterval(() => state.tick(), 500);
+
 
