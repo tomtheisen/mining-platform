@@ -1,4 +1,4 @@
-import { IGameState, IPlatform } from "commontypes";
+import { IGameState, IPlatform, ResourceType } from "commontypes";
 
 export abstract class Machine {
     protected readonly platform: IPlatform;
@@ -41,7 +41,26 @@ export class Digger extends Machine {
     run() {
         if (this.platform.power >= 10) {
             this.platform.power -= 10;
-            this.state.money += 5;
+            this.platform.addResource(ResourceType.dirt, 2);
+        }
+    }
+}
+
+export class DirtSeller extends Machine {
+    public readonly name = "Dirt Seller";
+
+    constructor(state: IGameState, platform: IPlatform) {
+        super(state, platform);
+    }
+
+    power() {}
+
+    run() {
+        if (this.platform.power >= 2 && this.platform.getResource(ResourceType.dirt) >= 1) {
+            this.platform.power -= 2;
+            if (this.platform.removeResource(ResourceType.dirt, 1)) {
+                this.state.money += 2;
+            }
         }
     }
 }

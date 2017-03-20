@@ -59,6 +59,7 @@ export default class GameState implements IGameState {
         let platform = new Platform(this, 10, null!);
         platform.modules.push(new Machine.SolarPanel(this, platform));
         platform.modules.push(new Machine.Digger(this, platform));
+        platform.modules.push(new Machine.DirtSeller(this, platform));
         this.platforms = [ platform ];
         this.cells = [[new Cell(platform)]];
         this.money = 10;
