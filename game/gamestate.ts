@@ -30,7 +30,7 @@ export default class GameState implements IGameState {
     get money() { return this._money; }
     set money(newMoney: number) {
         this._money = newMoney;
-        setText("money", newMoney);
+        setText("#money", newMoney);
     }
 
     tick() {
@@ -38,20 +38,27 @@ export default class GameState implements IGameState {
             this.hour -= 24;
             if (++this.day >= 365) {
                 this.day -= 365;
-                ++this.year
+                ++this.year;
             }
         }
-        setText("year", this.year);
-        setText("day", this.day);
-        setText("hour", this.hour);
+        setText("#year", this.year);
+        setText("#day", this.day);
+        setText("#hour", this.hour);
 
         this.platforms.forEach(p => p.tick());
     }
 
     reset() {
         this.year = this.day = this.hour = 0;
-        let platform = new Platform(this, 10);
+        document.getElementById("platforms")!.innerHTML = "";
+
+        let template = document.getElementById("new-platform") as HTMLTemplateElement;
+        let docFragment = document.importNode(template.content, true) as DocumentFragment;
+        document.getElementById("platforms")!.appendChild(docFragment);
+
+        let platform = new Platform(this, 10, null!);
         platform.modules.push(new Machine.SolarPanel(this, platform));
+        platform.modules.push(new Machine.Digger(this, platform));
         this.platforms = [ platform ];
         this.cells = [[new Cell(platform)]];
         this.money = 10;

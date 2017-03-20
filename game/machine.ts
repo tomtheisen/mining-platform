@@ -26,6 +26,22 @@ export class SolarPanel extends Machine {
         this.platform.power += 1;
     }
 
+    run() { }
+}
+
+export class Digger extends Machine {
+    public readonly name = "Digger";
+    
+    constructor(state: IGameState, platform: IPlatform) {
+        super(state, platform);
+    }
+
+    power() {}
+
     run() {
+        if (this.platform.power >= 10) {
+            this.platform.power -= 10;
+            this.state.money += 5;
+        }
     }
 }
