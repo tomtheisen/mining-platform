@@ -52,14 +52,10 @@ export default class GameState implements IGameState {
         this.year = this.day = this.hour = 0;
         document.getElementById("platforms")!.innerHTML = "";
 
-        let template = document.getElementById("new-platform") as HTMLTemplateElement;
-        let docFragment = document.importNode(template.content, true) as DocumentFragment;
-        document.getElementById("platforms")!.appendChild(docFragment);
-
-        let platform = new Platform(this, 10, null!);
-        platform.modules.push(new Machine.SolarPanel(this, platform));
-        platform.modules.push(new Machine.Digger(this, platform));
-        platform.modules.push(new Machine.DirtSeller(this, platform));
+        let platform = new Platform(this, 10);
+        platform.addMachine(new Machine.SolarPanel(this, platform));
+        platform.addMachine(new Machine.Digger(this, platform));
+        platform.addMachine(new Machine.DirtSeller(this, platform));
         this.platforms = [ platform ];
         this.cells = [[new Cell(platform)]];
         this.money = 10;

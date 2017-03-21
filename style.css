@@ -1,0 +1,26 @@
+* {
+    font-family: sans-serif;
+}
+
+#platforms {
+    position: relative;
+}
+
+.platform {
+    padding: .5em;
+    position: absolute;
+    border: solid blue .3em;
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul.machines > li {
+    border: solid black .1em;
+}
+
+ul.resources > li {
+    border: solid green .1em;
+}

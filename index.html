@@ -2,19 +2,13 @@
 <html>
 <head>
     <title>Mining Platform</title>
+    <link rel=stylesheet href="style.css">
 </head>
 <body>
     <p>Money: §<span id=money></span></p>
-    <p>Current date: <span id=year></span>-<span id=day></span>:<span id=hour></span></p>
+    <p>Current date: <span id=year></span>-<span id=day></span> <span id=hour></span>:00</p>
 
     <div id=platforms></div>
-
-    <template id=new-platform>
-        <div class=platform>
-            <h3 class=name></h3>
-            <p>Power: <span class=power></span></p>
-        </div>
-    </template>
 
     <script data-main="game/game" src="bower_components/requirejs/require.js"></script>
 </body>
