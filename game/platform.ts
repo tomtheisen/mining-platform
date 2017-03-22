@@ -1,4 +1,4 @@
-import { Machine } from "machine";
+import { SpecificMachine, allMachines, getMachineTypeName } from "machine";
 import { IGameState, IPlatform, ResourceType } from "commontypes";
 import { setText } from "domutil";
 
@@ -22,6 +22,14 @@ class PlatformResource {
     remove() {
         this.element.remove();
     }
+
+    serialize(): any {
+        return {
+            type: this.type.code,
+            quantity: this.quantity,
+        };
+    }
+    deserialize(state: any) {}
 }
 
 export default class Platform implements IPlatform {
@@ -29,8 +37,8 @@ export default class Platform implements IPlatform {
     capacity: number;
     rows = 1;
     columns = 1;
-    private _machines: Machine[] = [];
-    machines: ReadonlyArray<Machine> = this._machines;
+    private _machines: SpecificMachine[] = [];
+    machines: ReadonlyArray<SpecificMachine> = this._machines;
     
     private _power = 0;
     get power() { return this._power; }
@@ -42,19 +50,52 @@ export default class Platform implements IPlatform {
     private resources: PlatformResource[] = [];
 
     constructor(state: IGameState, capacity: number) {
-        const template = `\
-            <div class=platform>\
-                Power: <span class=power></span>🗲\
-                <ul class=resources></ul>\
-                <ul class=machines></ul>\
+        const template = `
+            <div class=platform>
+                Power: <span class=power></span>🗲
+                <div class=buy-menu>
+                    buy
+                    <div class=buy-dropdown>
+                        ${Object.keys(allMachines)
+                            .map((k: keyof typeof allMachines) => `<a href="javascript:" data-buy-machine="${k}">${k} - §${ allMachines[k].basePrice }</a><br>`)
+                            .join('')}
+                    </div>
+                </div>
+                <ul class=machines></ul>
+                <ul class=resources></ul>
             </div>`;
         this.element = document.createElement("div");
         this.element.innerHTML = template;
         document.getElementById("platforms")!.appendChild(this.element);
+        this.element.addEventListener("click", ev => {
+            let target = ev.target;
+            if (target instanceof HTMLElement) {
+                let buyMachine = target.getAttribute("data-buy-machine");
+                if (buyMachine && buyMachine in allMachines) {
+                    let ctor = allMachines[buyMachine as keyof typeof allMachines];
+                    if (this.state.money >= ctor.basePrice) {
+                        this.addMachine(new ctor(this. state, this));
+                        this.state.money -= ctor.basePrice;
+                    }
+                }
+            }
+        });
 
         this.state = state;
         this.capacity = capacity;
+        this.power = this.power; // invoke setter
     }
+
+    serialize(): any {
+        return {
+            power: this.power,
+            rows: this.rows,
+            columns: this.columns,
+            resources: this.resources.map(r => r.serialize()),
+            machines: this.machines.map(m => ({ type: getMachineTypeName(m), state: m.serialize() }))
+        };
+    }
+    deserialize(state: any) {}
 
     getMachineElement(): HTMLElement {
         let li = document.createElement("li");
@@ -67,7 +108,7 @@ export default class Platform implements IPlatform {
         this.machines.forEach(m => m.run());
     }
 
-    addMachine(m: Machine) {
+    addMachine(m: SpecificMachine) {
         this._machines.push(m);
     }
 

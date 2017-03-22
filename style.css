@@ -19,8 +19,44 @@ ul {
 
 ul.machines > li {
     border: solid black .1em;
+    position: relative;
+    padding: .2em;
+}
+
+ul.machines .progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: green;
+    height: .1em;
+    width: 0;
 }
 
 ul.resources > li {
     border: solid green .1em;
+}
+
+.buy-menu {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.buy-dropdown {
+    position: absolute;
+    top: 0;
+    right: 0;
+    z-index: 1;
+
+    white-space: nowrap;
+    text-align: right;
+
+    padding: .5em;
+    background-color: #fff;
+    box-shadow: 0 0 2em;
+    display: none;
+}
+
+.buy-menu:hover > .buy-dropdown {
+    display: block;
 }
