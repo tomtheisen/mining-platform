@@ -2,6 +2,7 @@ import Platform from "platform";
 import { setText } from "domutil";
 import { IGameState } from "commontypes";
 import * as Machine from "machine";
+import {returnOf} from "util";
 
 class CellConnection {
     first: Cell;
@@ -38,7 +39,7 @@ export default class GameState implements IGameState {
         setText("#money", newMoney);
     }
 
-    serialize(): any {
+    serialize() {
         return {
             year: this.year, 
             day: this.day, 
@@ -48,7 +49,19 @@ export default class GameState implements IGameState {
             cells: this.cells.map(row => row.map(c => c.serialize()))
         };
     }
-    deserialize(state: any) {}
+    static readonly serializeType = returnOf((g: GameState) => g.serialize());
+    deserialize(serialized: typeof GameState.serializeType) {
+        this.year = serialized.year;
+        this.day = serialized.day;
+        this.hour = serialized.hour;
+        this.money = serialized.money;
+        this.platforms.forEach(p => p.removeElement());
+        this.platforms = serialized.platforms.map(p => {
+            let newP = new Platform(this, p.capacity);
+            newP.deserialize(p);
+            return newP;
+        });
+    }
 
     tick() {
         if (++this.hour >= 24) {

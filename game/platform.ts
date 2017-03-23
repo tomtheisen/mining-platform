@@ -1,6 +1,7 @@
 import { SpecificMachine, allMachines, getMachineTypeName } from "machine";
 import { IGameState, IPlatform, ResourceType } from "commontypes";
 import { setText } from "domutil";
+import { returnOf } from "util";
 
 class PlatformResource {
     type: ResourceType;
@@ -23,7 +24,7 @@ class PlatformResource {
         this.element.remove();
     }
 
-    serialize(): any {
+    serialize() {
         return {
             type: this.type.code,
             quantity: this.quantity,
@@ -86,16 +87,41 @@ export default class Platform implements IPlatform {
         this.power = this.power; // invoke setter
     }
 
-    serialize(): any {
+    serialize() {
         return {
             power: this.power,
             rows: this.rows,
+            capacity: this.capacity,
             columns: this.columns,
             resources: this.resources.map(r => r.serialize()),
             machines: this.machines.map(m => ({ type: getMachineTypeName(m), state: m.serialize() }))
         };
     }
-    deserialize(state: any) {}
+    static readonly serializeType = returnOf((p: Platform) => p.serialize());
+    deserialize(serialized: typeof Platform.serializeType) {
+        this.power = serialized.power;
+        this.rows = serialized.rows;
+        this.columns = serialized.columns;
+        this.capacity = serialized.capacity;
+
+        this.resources.splice(0);
+        serialized.resources.forEach(r => {
+            let type = ResourceType.allTypes.filter(t => t.code === r.type)[0];
+            this.addResource(type, r.quantity);
+        });
+
+        this._machines.splice(0);
+        serialized.machines.forEach(m => {
+            let ctor = allMachines[m.type];
+            let machine = new ctor(this.state, this);
+            machine.deserialize(m.state);
+            this.addMachine(machine);
+        });
+    }
+
+    removeElement() {
+        this.element.parentNode!.removeChild(this.element);
+    }
 
     getMachineElement(): HTMLElement {
         let li = document.createElement("li");

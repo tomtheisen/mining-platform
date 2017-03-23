@@ -1,5 +1,5 @@
 import { IGameState, IPlatform, ResourceType } from "commontypes";
-import { value } from "util";
+import { value, returnOf } from "util";
 
 abstract class Machine {
     protected readonly platform: IPlatform;
@@ -63,10 +63,8 @@ export class SolarPanel extends Machine {
 
     run() { }
 
-    serialize() {
-        return {};
-    }
-    deserialize() {}
+    serialize() { return null; }
+    deserialize(state: any) { }
 }
 
 export class Digger extends Machine {
@@ -99,14 +97,16 @@ export class Digger extends Machine {
 
     serialize() {
         return {
-            powerUser: this.powerUse,
-            dirtDug: this.dirtDug,
-            totalHours: this.totalHours,
             running: this.running,
             elapsed: this.elapsed,
         };
     }
-    deserialize() {}
+    deserialize(serialized: any) {
+        const serializeType = returnOf(this.serialize);
+        let s = serialized as typeof serializeType;
+        this.running = s.running;
+        this.elapsed = s.elapsed;
+    }
 }
 
 export class Shovel extends Machine {
@@ -136,8 +136,8 @@ export class Shovel extends Machine {
             this.platform.addResource(ResourceType.dirt, this.dirtDug);
         }
     }
-    serialize() {}
-    deserialize(state: any): void {}
+    serialize() { return null; }
+    deserialize(state: any) { }
 }
 
 export class AutoDirtSeller extends Machine {
@@ -160,10 +160,8 @@ export class AutoDirtSeller extends Machine {
         }
     }
 
-    serialize() {
-        return {};
-    }
-    deserialize() {}
+    serialize() { return null; }
+    deserialize(state: any) { }
 }
 
 export class DirtSeller extends Machine {
@@ -188,9 +186,7 @@ export class DirtSeller extends Machine {
         this.running = false;
     }
 
-    serialize() {
-        return {};
-    }
+    serialize() { return null; }
     deserialize(state: any): void { }
 }
 
@@ -217,7 +213,7 @@ export class CrankGenerator extends Machine {
     }
 
     serialize() { return null; }
-    deserialize() {}
+    deserialize(state: any) {}
 }
 
 export const allMachines = {
