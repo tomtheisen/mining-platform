@@ -30,6 +30,9 @@ ul.machines .progress {
     background-color: green;
     height: .1em;
     width: 0;
+    transition-duration: .5s;
+    transition-timing-function: linear;
+    transition-property: width;
 }
 
 ul.resources > li {

@@ -74,6 +74,6 @@ export default class GameState implements IGameState {
         platform.addMachine(new Machine.DirtSeller(this, platform));
         this.platforms = [ platform ];
         this.cells = [[new Cell(platform)]];
-        this.money = 1;
+        this.money = 1000;
     }
 }

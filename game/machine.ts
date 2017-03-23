@@ -23,8 +23,11 @@ abstract class Machine {
     private setProgress() {
         if (!this.progressElement) this.progressElement = this.element.querySelector(".progress") as HTMLElement;
         if (this.progressElement) {
-            let percent = this.elapsed / value(this.totalHours) * 100;
+            // progress bar is animated, so calculate where we want to end up by *next* tick
+            // assuming consistent + 1 progress
+            let percent = (this.elapsed + (this.running ? 1 : 0)) / value(this.totalHours) * 100;
             this.progressElement.style.width = percent + "%";
+            this.progressElement.style.visibility = this.running ? "visible" : "hidden";
         } else {
             console.warn("tried to set progress without a bar", this)
         }
@@ -49,8 +52,7 @@ export class SolarPanel extends Machine {
 
     constructor(state: IGameState, platform: IPlatform) {
         super(state, platform);
-        let el = platform.getMachineElement();
-        el.innerHTML = `${this.name} +${this.generationRate}🗲`;
+        this.element.innerHTML = `${this.name} +${this.generationRate}🗲`;
     }
 
     power() {
@@ -85,6 +87,7 @@ export class Digger extends Machine {
         if (this.running && typeof this.elapsed === "number") {
             if (++this.elapsed >= value(this.totalHours)) {
                 this.running = false;
+                this.elapsed = 0;
                 this.platform.addResource(ResourceType.dirt, this.dirtDug);
             }
         } else if (this.platform.power >= this.powerUse) {
@@ -111,22 +114,27 @@ export class Shovel extends Machine {
 
     public name: string = "Shovel";
     public dirtDug = 1;
-    public digging = false;
 
     constructor(state: IGameState, platform: IPlatform) {
         super(state, platform);
-        this.element.innerHTML = `${this.name} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
+        this.totalHours = 3;
+
+        this.element.innerHTML = this.progressTemplate + `${this.name} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
         this.element.querySelector("button")!.addEventListener("click", ev => {
-            if (!this.digging) {
-                this.digging = true;
-                this.platform.addResource(ResourceType.dirt, this.dirtDug);
+            if (!this.running) {
+                this.running = true;
+                this.elapsed = 0;
             }
         });
     }
 
     power(): void {}
     run(): void {
-        this.digging = false;
+        if (this.running && ++this.elapsed >= value(this.totalHours)) {
+            this.running = false;
+            this.elapsed = 0;
+            this.platform.addResource(ResourceType.dirt, this.dirtDug);
+        }
     }
     serialize() {}
     deserialize(state: any): void {}
@@ -194,15 +202,11 @@ export class CrankGenerator extends Machine {
 
     constructor(state: IGameState, platform: IPlatform) {
         super(state, platform);
-        let el = platform.getMachineElement();
-        el.innerHTML = `${this.name} <button>+${this.generationRate}🗲</button>`;
-        el.addEventListener("click", (ev) => {
-            let target = ev.target;
-            if (target instanceof HTMLButtonElement) {
-                if (this.crankedThisTick) return;
-                this.platform.power += this.generationRate;
-                this.crankedThisTick = true;
-            }
+        this.element.innerHTML = `${this.name} <button>+${this.generationRate}🗲</button>`;
+        this.element.querySelector("button")!.addEventListener("click", (ev) => {
+            if (this.crankedThisTick) return;
+            this.platform.power += this.generationRate;
+            this.crankedThisTick = true;
         })
     }
     
