@@ -70,10 +70,10 @@ export default class GameState implements IGameState {
         document.getElementById("platforms")!.innerHTML = "";
 
         let platform = new Platform(this, 10);
-        platform.addMachine(new Machine.CrankGenerator(this, platform));
-        platform.addMachine(new Machine.Digger(this, platform));
+        platform.addMachine(new Machine.Shovel(this, platform));
+        platform.addMachine(new Machine.DirtSeller(this, platform));
         this.platforms = [ platform ];
         this.cells = [[new Cell(platform)]];
-        this.money = 15;
+        this.money = 1;
     }
 }
