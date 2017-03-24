@@ -1,0 +1,209 @@
+import { SpecificMachine, allMachines, MachineCode } from "machine";
+import { IGameState, ICell, ResourceType } from "commontypes";
+import { setText } from "domutil";
+import { returnOf } from "util";
+
+const width = 13;
+const height = 16;
+
+class CellResource {
+    type: ResourceType;
+    private _quantity: number = 0;
+    get quantity() { return this._quantity; }
+    set quantity(value: number) {
+        setText(".quantity", this._quantity = value, this.element);
+    }
+
+    element: HTMLElement;
+
+    constructor(type: ResourceType, element: HTMLElement, quantity: number = 0) {
+        element.innerHTML =  `<span class=quantity>0</span>${type.symbol} (${type.name})`;
+
+        this.type = type;
+        this.element = element;
+        this.quantity = quantity;
+    }
+
+    remove() {
+        this.element.remove();
+    }
+
+    serialize() {
+        return {
+            type: this.type.code,
+            quantity: this.quantity,
+        };
+    }
+    deserialize(state: any) {}
+}
+
+export default class Cell implements ICell {
+    readonly state: IGameState;
+    capacity: number;
+    private _machines: SpecificMachine[] = [];
+    machines: ReadonlyArray<SpecificMachine> = this._machines;
+    
+    private _power = 0;
+    get power() { return this._power; }
+    set power(value: number) {
+        setText(".power", this._power = value, this.element);
+    }
+
+    private _row: number;
+    set row(value: number) {
+        this.element.style.top = value * height + "em";
+        this._row = value;
+    }
+
+    private _col: number;
+    set col(value: number) {
+        this.element.style.left = value * width + "em";
+        this._col = value;
+    }
+
+    private element: HTMLElement;
+    private resources: CellResource[] = [];
+
+    static uniqueId = 0;
+    constructor(state: IGameState, capacity = 10) {
+        ++Cell.uniqueId;
+        const template = `
+            <div class=cell>
+                <input id=mc${Cell.uniqueId} type=radio checked name=${Cell.uniqueId} data-show=machines>
+                <label for=mc${Cell.uniqueId}>mc</label>
+                <input id=rs${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=resources>
+                <label for=rs${Cell.uniqueId}>rs</label>
+                <input id=out${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=out>
+                <label for=out${Cell.uniqueId}>out</label>
+                <input id=buy${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=buy>
+                <label for=buy${Cell.uniqueId}>buy</label>
+
+                <div class=machine-section>
+                    Power: <span class=power></span>🗲
+                    <ul class=machines></ul>
+                </div>
+                <div class=resource-section>
+                    <ul class=resources></ul>
+                </div>
+                <div class=out-section>
+                    out lol
+                </div>
+                <div class=buy-section>
+                    ${Object.keys(allMachines)
+                        .map((k: MachineCode) => `<a href="javascript:" data-buy-machine="${k}">${k} - §${ allMachines[k].basePrice }</a><br>`)
+                        .join('')}
+                </div>
+
+            </div>`;
+        let container = document.createElement("div");
+        container.innerHTML = template;
+        this.element = container.querySelector("*") as HTMLElement;
+
+        document.getElementById("cells")!.appendChild(this.element);
+        this.element.addEventListener("click", ({ target }) => {
+            if (!(target instanceof HTMLElement)) return;
+
+            let buyMachine = target.getAttribute("data-buy-machine");
+            if (buyMachine && buyMachine in allMachines) {
+                let code = buyMachine as MachineCode;
+                let basePrice = allMachines[code].basePrice;
+                if (this.state.money >= basePrice) {
+                    this.state.money -= basePrice;
+                    this.addMachine(code);
+                }
+            }
+        });
+
+        this.state = state;
+        this.capacity = capacity;
+        this.power = this.power; // invoke setter
+    }
+
+    serialize() {
+        return {
+            power: this.power,
+            capacity: this.capacity,
+            resources: this.resources.map(r => r.serialize()),
+            machines: this.machines.map(m => ({ type: m.getMachineTypeCode(), state: m.serialize() }))
+        };
+    }
+    deserialize(s: any) {
+        const serializeType = returnOf(this.serialize);
+        let serialized = s as typeof serializeType;
+
+        this.power = serialized.power;
+        this.capacity = serialized.capacity;
+
+        this.resources.splice(0);
+        serialized.resources.forEach(r => {
+            let type = ResourceType.allTypes.filter(t => t.code === r.type)[0];
+            this.addResource(type, r.quantity);
+        });
+
+        this._machines.splice(0);
+        serialized.machines.forEach(m => {
+            this.addMachine(m.type).deserialize(m.state);
+        });
+    }
+
+    removeElement() {
+        this.element.parentNode!.removeChild(this.element);
+    }
+
+    private getMachineElement(): HTMLElement {
+        let li = document.createElement("li");
+        this.element.querySelector(".machines")!.appendChild(li);
+        return li;
+    }
+
+    tick() {
+        this.machines.forEach(m => m.power());
+        this.machines.forEach(m => m.run());
+    }
+
+    addMachine(code: MachineCode): SpecificMachine {
+        let ctor = allMachines[code];
+        let machine = new ctor(this.state, this, this.getMachineElement());
+        this._machines.push(machine);
+        return machine;
+    }
+
+    addResource(type: ResourceType, quantity: number) {
+        for (let r of this.resources) {
+            if (r.type === type) {
+                r.quantity += quantity;
+                return;
+            }
+        }
+        let li = document.createElement("li");
+        this.element.querySelector(".resources")!.appendChild(li);
+        let newResource = new CellResource(type, li, quantity);
+        this.resources.push(newResource);
+    }
+
+    getResource(type: ResourceType): number {
+        for (let r of this.resources) {
+            if (r.type === type) return r.quantity;
+        }
+        return 0;
+    }
+
+    removeResource(type: ResourceType, quantity: number) {
+        let i = 0;
+        for (let r of this.resources) {
+            if (r.type === type) {
+                if (r.quantity >= quantity) {
+                    r.quantity -= quantity;
+                    if (r.quantity === 0) {
+                        r.remove();
+                        this.resources.splice(i, 1);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            i += 1;
+        }
+        return false;
+    }
+}

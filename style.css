@@ -1,15 +1,56 @@
 * {
     font-family: sans-serif;
+    box-sizing: border-box;
 }
 
-#platforms {
+input[type=radio] {
+    display: none;
+}
+
+label {
+    cursor: pointer;
+}
+
+input[type=radio]:checked + label {
+    color: red;
+}
+
+#cells {
     position: relative;
+    background-color: #eee;
+    width: calc(100vw - 1em);
+    height: calc(100vh - 10em);
+    overflow: scroll;
 }
 
-.platform {
+.cell {
+    background-color: #fff;
     padding: .5em;
     position: absolute;
     border: solid blue .3em;
+    width: 12em;
+    height: 15em;
+    overflow: auto;
+}
+
+.machine-section, .resource-section, .out-section, .buy-section {
+    display: none;
+}
+
+input[data-show=machines]:checked ~ .machine-section {
+    display: block;
+}
+
+input[data-show=resources]:checked ~ .resource-section {
+    display: block;
+}
+
+input[data-show=out]:checked ~ .out-section {
+    display: block;
+}
+
+input[data-show=buy]:checked ~ .buy-section {
+    display: block;
 }
 
 ul {
@@ -39,27 +80,3 @@ ul.resources > li {
     border: solid green .1em;
 }
 
-.buy-menu {
-    position: absolute;
-    top: 0;
-    right: 0;
-}
-
-.buy-dropdown {
-    position: absolute;
-    top: 0;
-    right: 0;
-    z-index: 1;
-
-    white-space: nowrap;
-    text-align: right;
-
-    padding: .5em;
-    background-color: #fff;
-    box-shadow: 0 0 2em;
-    display: none;
-}
-
-.buy-menu:hover > .buy-dropdown {
-    display: block;
-}

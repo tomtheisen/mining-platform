@@ -1,11 +1,10 @@
-import { IGameState, IPlatform, ResourceType } from "commontypes";
+import { IGameState, ICell, ResourceType } from "commontypes";
 import { value, returnOf } from "util";
 
 abstract class Machine {
-    protected readonly platform: IPlatform;
+    protected readonly cell: ICell;
     protected readonly state: IGameState;
 
-    public readonly abstract name: string;
     protected readonly progressTemplate = "<div class=progress></div>";
 
     public readonly element: HTMLElement;
@@ -38,26 +37,34 @@ abstract class Machine {
     abstract serialize(): any;
     abstract deserialize(state: any): void;
 
-    constructor(state: IGameState, platform: IPlatform) {
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         this.state = state;
-        this.platform = platform;
-        this.element = platform.getMachineElement();
+        this.cell = cell;
+        this.element = element;
+    }
+
+    getMachineTypeCode(): MachineCode {
+        for(let name of Object.keys(allMachines) as MachineCode[]) {
+            if (allMachines[name] === this.constructor) return name;
+        }
+        console.error(this);
+        throw "machine constructor not found";
     }
 }
 
 export class SolarPanel extends Machine {
     static readonly basePrice = 100;
-    public readonly name = "Solar Panel";
+    static readonly label = "Solar Panel";
     public generationRate = 1;
 
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
-        this.element.innerHTML = `${this.name} +${this.generationRate}🗲`;
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
+        this.element.innerHTML = `${SolarPanel.label} +${this.generationRate}🗲`;
     }
 
     power() {
         if (this.state.hour >= 6 && this.state.hour < 18) {
-            this.platform.power += this.generationRate;
+            this.cell.power += this.generationRate;
         }
     }
 
@@ -69,14 +76,14 @@ export class SolarPanel extends Machine {
 
 export class Digger extends Machine {
     static readonly basePrice = 10;
-    public readonly name = "Dirt Digger";
+    static readonly label = "Dirt Digger";
     public powerUse = 10;
     public dirtDug = 2;
 
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
         this.totalHours = 24;
-        this.element.innerHTML = this.progressTemplate + `${this.name} -${this.powerUse}🗲 +${this.dirtDug}${ResourceType.dirt.symbol} (${this.totalHours}h)`;
+        this.element.innerHTML = this.progressTemplate + `${Digger.label} -${this.powerUse}🗲 +${this.dirtDug}${ResourceType.dirt.symbol} (${this.totalHours}h)`;
     }
 
     power() {}
@@ -86,10 +93,10 @@ export class Digger extends Machine {
             if (++this.elapsed >= value(this.totalHours)) {
                 this.running = false;
                 this.elapsed = 0;
-                this.platform.addResource(ResourceType.dirt, this.dirtDug);
+                this.cell.addResource(ResourceType.dirt, this.dirtDug);
             }
-        } else if (this.platform.power >= this.powerUse) {
-            this.platform.power -= this.powerUse;
+        } else if (this.cell.power >= this.powerUse) {
+            this.cell.power -= this.powerUse;
             this.running = true;
             this.elapsed = 0;
         }
@@ -112,14 +119,14 @@ export class Digger extends Machine {
 export class Shovel extends Machine {
     public static basePrice = 1;
 
-    public name: string = "Shovel";
+    static readonly label = "Shovel";
     public dirtDug = 1;
 
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
         this.totalHours = 3;
 
-        this.element.innerHTML = this.progressTemplate + `${this.name} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
+        this.element.innerHTML = this.progressTemplate + `${Shovel.label} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
         this.element.querySelector("button")!.addEventListener("click", ev => {
             if (!this.running) {
                 this.running = true;
@@ -133,7 +140,7 @@ export class Shovel extends Machine {
         if (this.running && ++this.elapsed >= value(this.totalHours)) {
             this.running = false;
             this.elapsed = 0;
-            this.platform.addResource(ResourceType.dirt, this.dirtDug);
+            this.cell.addResource(ResourceType.dirt, this.dirtDug);
         }
     }
     serialize() { return null; }
@@ -142,21 +149,21 @@ export class Shovel extends Machine {
 
 export class AutoDirtSeller extends Machine {
     static readonly basePrice = 5;
-    public readonly name = "Auto Dirt Seller";
-    public powerUse = 1;
-    public price = 2;
+    static readonly label = "Auto Dirt Seller";
+    powerUse = 1;
+    salePrice = 1;
 
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
-        this.element.innerHTML = `${this.name} -1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.price}`;
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
+        this.element.innerHTML = `${AutoDirtSeller.label} -1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`;
     }
 
     power() {}
 
     run() {
-        if (this.platform.power >= this.powerUse && this.platform.removeResource(ResourceType.dirt, 1)) {
-            this.state.money += this.price;
-            this.platform.power -= this.powerUse;
+        if (this.cell.power >= this.powerUse && this.cell.removeResource(ResourceType.dirt, 1)) {
+            this.state.money += this.salePrice;
+            this.cell.power -= this.powerUse;
         }
     }
 
@@ -166,17 +173,16 @@ export class AutoDirtSeller extends Machine {
 
 export class DirtSeller extends Machine {
     public static basePrice = 1;
+    static readonly label = "Dirt Seller";
+    salePrice = 1;
 
-    public name: string = "Dirt Seller";
-    public price = 2;
-
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
-        this.element.innerHTML = `${this.name} <button>-1${ResourceType.dirt.symbol} +§${this.price}</button>`;
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
+        this.element.innerHTML = `${DirtSeller.label} <button>-1${ResourceType.dirt.symbol} +§${this.salePrice}</button>`;
         this.element.querySelector("button")!.addEventListener("click", ev => {
-            if (!this.running && this.platform.removeResource(ResourceType.dirt, 1)) {
+            if (!this.running && this.cell.removeResource(ResourceType.dirt, 1)) {
                 this.running = true;
-                this.state.money += this.price;
+                this.state.money += this.salePrice;
             }
         })
     }
@@ -191,17 +197,17 @@ export class DirtSeller extends Machine {
 }
 
 export class CrankGenerator extends Machine {
-    public name = "Crank Generator";
+    static readonly label = "Crank Generator";
     public static basePrice = 10;
     public generationRate = 1;
     private crankedThisTick = false;
 
-    constructor(state: IGameState, platform: IPlatform) {
-        super(state, platform);
-        this.element.innerHTML = `${this.name} <button>+${this.generationRate}🗲</button>`;
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element);
+        this.element.innerHTML = `${CrankGenerator.label} <button>+${this.generationRate}🗲</button>`;
         this.element.querySelector("button")!.addEventListener("click", (ev) => {
             if (this.crankedThisTick) return;
-            this.platform.power += this.generationRate;
+            this.cell.power += this.generationRate;
             this.crankedThisTick = true;
         })
     }
@@ -216,6 +222,8 @@ export class CrankGenerator extends Machine {
     deserialize(state: any) {}
 }
 
+// lookup for constructors by name
+// also runs a bunch of type shenanigans
 export const allMachines = {
     SolarPanel: SolarPanel,
     Digger: Digger, 
@@ -227,9 +235,4 @@ export const allMachines = {
 
 export type SpecificMachine = SolarPanel | Digger | AutoDirtSeller | CrankGenerator | Shovel | DirtSeller;
 
-export function getMachineTypeName(machine: Machine): keyof typeof allMachines {
-    for(let name of Object.keys(allMachines) as (keyof typeof allMachines)[]) {
-        if (allMachines[name] === machine.constructor) return name;
-    }
-    throw machine.name + " not found";
-}
+export type MachineCode = keyof typeof allMachines;

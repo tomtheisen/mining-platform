@@ -5,13 +5,12 @@ export interface IGameState {
     readonly hour: number;
 }
 
-export interface IPlatform {
+export interface ICell {
     power: number;
 
     addResource(type: ResourceType, amount: number): void;
     getResource(type: ResourceType): number;
     removeResource(type: ResourceType, amount: number): boolean;
-    getMachineElement(): HTMLElement;
 }
 
 export class ResourceType {
