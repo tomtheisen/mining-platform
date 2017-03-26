@@ -1,6 +1,14 @@
+import { Subscriptions } from "util";
+
 export interface MachineMetadata {
     basePrice: number;
     label: string;
+}
+
+export interface IMachineConstructorState {
+    readonly type: MachineMetadata;
+    readonly affordable: boolean;
+    readonly props: Subscriptions<IMachineConstructorState>;
 }
 
 export interface IGameState {
@@ -8,7 +16,7 @@ export interface IGameState {
     readonly year: number;
     readonly day: number;
     readonly hour: number;
-    getAffordableMachines(): MachineMetadata[]
+    readonly machineTypes: ReadonlyArray<IMachineConstructorState>;
 }
 
 export interface ICell {

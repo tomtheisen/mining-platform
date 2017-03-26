@@ -1,10 +1,30 @@
 import Cell from "cell";
 import { setText } from "domutil";
-import { IGameState } from "commontypes";
+import { IGameState, IMachineConstructorState } from "commontypes";
 import { MachineConstructor, allMachines } from "machine";
-import {returnOf} from "util";
+import { returnOf, Subscriptions } from "util";
+
+class MachineConstructorState implements IMachineConstructorState {
+    readonly props = new Subscriptions<MachineConstructorState>();
+    
+    readonly type: MachineConstructor;
+    private _affordable: boolean;
+    get affordable() { return this.affordable; }
+    set affordable(value: boolean) { 
+        let notify = this._affordable !== value;
+        this._affordable = value;
+        if (notify) this.props.publish("affordable", value);
+    }
+
+    constructor(state: GameState, ctor: MachineConstructor) {
+        this.type = ctor;
+        state.props.subscribe("money", money => this.affordable = money >= ctor.basePrice);
+    }
+}
 
 export default class GameState implements IGameState {
+    readonly props = new Subscriptions<GameState>();
+
     cells: Cell[][] = [];
 
     year: number;
@@ -13,23 +33,19 @@ export default class GameState implements IGameState {
 
     private _money: number;
     get money() { return this._money; }
-    set money(newMoney: number) {
-        this._money = newMoney;
-        setText("#money", newMoney);
+    set money(value: number) {
+        let notify = this._money !== value;
+        this._money = value;
+        setText("#money", value);
+        if (notify) this.props.publish("money", value);
     }
 
-    getAffordableMachines(): MachineConstructor[] {
-        for (var i = 0; i < this._machineTypes.length; i++) {
-            if (this._machineTypes[i].basePrice > this.money) break;
-        }
-        return this._machineTypes.slice(0, i);
-    }
-
-    private _machineTypes: MachineConstructor[];
+    machineTypes: ReadonlyArray<MachineConstructorState>;
     constructor() {
         let codes = Object.keys(allMachines) as string[];
-        this._machineTypes = codes.map(c => allMachines[c]);
-        this._machineTypes.sort((a, b) => a.basePrice - b.basePrice);
+        this.machineTypes = codes
+            .map(c => new MachineConstructorState(this, allMachines[c]))
+            .sort((a, b) => a.type.basePrice - b.type.basePrice);
     }
 
     allCells() {

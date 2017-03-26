@@ -68,6 +68,11 @@ export default class Cell implements ICell {
     static uniqueId = 0;
     constructor(state: IGameState, capacity = 10) {
         ++Cell.uniqueId;
+
+        this.state = state;
+        this.capacity = capacity;
+        this.power = this.power; // invoke setter
+
         const template = `
             <div class=cell>
                 <input id=mc${Cell.uniqueId} type=radio checked name=${Cell.uniqueId} data-show=machines>
@@ -90,11 +95,28 @@ export default class Cell implements ICell {
                     out lol
                 </div>
                 <div class=buy-section>
+                    ${
+                        this.state.machineTypes.map(machine => {{
+                            let ctor = machine.type;
+                            let code = getMachineTypeCode(ctor);
+                            return `<a href="javascript:" data-buy-machine="${ code }">${ ctor.label } - §${ ctor.basePrice }</a><br>`;
+                        }}).join('')
+                    }
                 </div>
             </div>`;
         let container = document.createElement("div");
         container.innerHTML = template;
         this.element = container.querySelector("*") as HTMLElement;
+
+        let anchors = this.element.querySelector(".buy-section")!.querySelectorAll("a");
+        let i = 0;
+        for (let machine of this.state.machineTypes) {
+            let anchor = anchors.item(i++);
+            machine.props.subscribe("affordable", isAffordable => {
+                anchor.style.display = isAffordable ? "block" : "none";
+                return true;
+            });
+        }
 
         document.getElementById("cells")!.appendChild(this.element);
         this.element.addEventListener("click", ({ target }) => {
@@ -109,10 +131,6 @@ export default class Cell implements ICell {
                 }
             }
         });
-
-        this.state = state;
-        this.capacity = capacity;
-        this.power = this.power; // invoke setter
     }
 
     serialize() {
@@ -153,10 +171,6 @@ export default class Cell implements ICell {
     }
 
     tick() {
-        this.element.querySelector(".buy-section")!.innerHTML = this.state.getAffordableMachines()
-            .map(ctor => `<a href="javascript:" data-buy-machine="${ getMachineTypeCode(ctor) }">${ ctor.label } - §${ ctor.basePrice }</a><br>`)
-            .join('');
-
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
     }
