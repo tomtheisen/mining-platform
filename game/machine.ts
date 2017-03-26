@@ -125,7 +125,7 @@ class Digger extends Machine {
 }
 
 class Shovel extends Machine {
-    public static basePrice = 1;
+    public static basePrice = 2;
 
     static readonly label = "Shovel";
     public dirtDug = 1;

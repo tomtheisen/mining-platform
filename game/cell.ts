@@ -67,25 +67,24 @@ export default class Cell implements ICell {
 
     static uniqueId = 0;
     constructor(state: IGameState, capacity = 10) {
-        ++Cell.uniqueId;
+        let id = ++Cell.uniqueId;
 
         this.state = state;
         this.capacity = capacity;
-        this.power = this.power; // invoke setter
 
         const template = `
             <div class=cell>
-                <input id=mc${Cell.uniqueId} type=radio checked name=${Cell.uniqueId} data-show=machines>
-                <label for=mc${Cell.uniqueId}>mc</label>
-                <input id=rs${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=resources>
-                <label for=rs${Cell.uniqueId}>rs</label>
-                <input id=out${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=out>
-                <label for=out${Cell.uniqueId}>out</label>
-                <input id=buy${Cell.uniqueId} type=radio name=${Cell.uniqueId} data-show=buy>
-                <label for=buy${Cell.uniqueId}>buy</label>
+                <input id=mc${id} type=radio checked name=${id} data-show=machines>
+                <label for=mc${id}>mc</label>
+                <input id=rs${id} type=radio name=${id} data-show=resources>
+                <label for=rs${id}>rs</label>
+                <input id=buy${id} type=radio name=${id} data-show=buy>
+                <label for=buy${id}>buy</label>
+                <input id=out${id} type=radio name=${id} data-show=out>
+                <label for=out${id}>out</label>
 
                 <div class=machine-section>
-                    Power: <span class=power></span>🗲
+                    Power: <span class=power>0</span>🗲
                     <ul class=machines></ul>
                 </div>
                 <div class=resource-section>
@@ -113,7 +112,7 @@ export default class Cell implements ICell {
         for (let machine of this.state.machineTypes) {
             let anchor = anchors.item(i++);
             machine.props.subscribe("affordable", isAffordable => {
-                anchor.style.display = isAffordable ? "block" : "none";
+                anchor.style.display = isAffordable ? "initial" : "none";
                 return true;
             });
         }

@@ -5,11 +5,11 @@ import { MachineConstructor, allMachines } from "machine";
 import { returnOf, Subscriptions } from "util";
 
 class MachineConstructorState implements IMachineConstructorState {
-    readonly props = new Subscriptions<MachineConstructorState>();
+    readonly props = new Subscriptions<MachineConstructorState>(this);
     
     readonly type: MachineConstructor;
     private _affordable: boolean;
-    get affordable() { return this.affordable; }
+    get affordable() { return this._affordable; }
     set affordable(value: boolean) { 
         let notify = this._affordable !== value;
         this._affordable = value;
@@ -18,12 +18,15 @@ class MachineConstructorState implements IMachineConstructorState {
 
     constructor(state: GameState, ctor: MachineConstructor) {
         this.type = ctor;
-        state.props.subscribe("money", money => this.affordable = money >= ctor.basePrice);
+        state.props.subscribe("money", money => {
+            this.affordable = money >= ctor.basePrice;
+            return true;
+        });
     }
 }
 
 export default class GameState implements IGameState {
-    readonly props = new Subscriptions<GameState>();
+    readonly props = new Subscriptions<GameState>(this);
 
     cells: Cell[][] = [];
 
@@ -109,19 +112,19 @@ export default class GameState implements IGameState {
 
     reset() {
         this.year = this.day = this.hour = 0;
-        this.money = 1000;
+        this.money = 1;
         document.getElementById("cells")!.innerHTML = "";
 
         let cell1 = new Cell(this);
         cell1.addMachine("Shovel");
-        cell1.addMachine("DirtSeller");
+        //cell1.addMachine("DirtSeller");
 
-        let cell2 = new Cell(this);
-        cell2.addMachine("Shovel");
+        // let cell2 = new Cell(this);
+        // cell2.addMachine("Shovel");
 
         this.cells = [
             [cell1],
-            [cell2],
+            // [cell2],
         ];
         this.renumberCells();
     }

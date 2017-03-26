@@ -8,11 +8,18 @@ export function returnOf<T>(fn: (...args: any[]) => T) {
 }
 
 export class Subscriptions<T> {
+    private instance: T;
+
+    constructor(instance: T) {
+        this.instance = instance;
+    }
+
     private subscribers: { [name: string]: ((val: any) => boolean)[] } = {};
 
     subscribe<TKey extends keyof T>(name: TKey, callback: (newValue: T[TKey]) => boolean): void {
         if (!this.subscribers[name]) this.subscribers[name] = [];
         this.subscribers[name].push(callback);
+        callback(this.instance[name]);
     }
 
     publish<TKey extends keyof T>(name: TKey, newValue: T[TKey]) {
