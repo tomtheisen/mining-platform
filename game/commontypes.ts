@@ -1,8 +1,14 @@
+export interface MachineMetadata {
+    basePrice: number;
+    label: string;
+}
+
 export interface IGameState {
     money: number;
     readonly year: number;
     readonly day: number;
     readonly hour: number;
+    getAffordableMachines(): MachineMetadata[]
 }
 
 export interface ICell {
@@ -29,3 +35,4 @@ export class ResourceType {
 
     public static readonly allTypes: ResourceType[] = [ResourceType.dirt, ResourceType.junk];
 }
+

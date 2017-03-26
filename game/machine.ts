@@ -1,7 +1,19 @@
-import { IGameState, ICell, ResourceType } from "commontypes";
+import { IGameState, ICell, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
 
-abstract class Machine {
+export interface MachineConstructor extends Function, MachineMetadata {
+    new(state: IGameState, cell: ICell, element: HTMLElement): Machine;
+}
+
+export function getMachineTypeCode(ctor: MachineMetadata): string {
+    for(let code of Object.keys(allMachines)) {
+        if (allMachines[code] === ctor) return code;
+    }
+    console.error(this);
+    throw "machine constructor not found";
+}
+
+export abstract class Machine {
     protected readonly cell: ICell;
     protected readonly state: IGameState;
 
@@ -43,16 +55,12 @@ abstract class Machine {
         this.element = element;
     }
 
-    getMachineTypeCode(): MachineCode {
-        for(let name of Object.keys(allMachines) as MachineCode[]) {
-            if (allMachines[name] === this.constructor) return name;
-        }
-        console.error(this);
-        throw "machine constructor not found";
+    getMachineTypeCode(): string {
+        return getMachineTypeCode(this.constructor as MachineConstructor);
     }
 }
 
-export class SolarPanel extends Machine {
+class SolarPanel extends Machine {
     static readonly basePrice = 100;
     static readonly label = "Solar Panel";
     public generationRate = 1;
@@ -74,7 +82,7 @@ export class SolarPanel extends Machine {
     deserialize(state: any) { }
 }
 
-export class Digger extends Machine {
+class Digger extends Machine {
     static readonly basePrice = 10;
     static readonly label = "Dirt Digger";
     public powerUse = 10;
@@ -116,7 +124,7 @@ export class Digger extends Machine {
     }
 }
 
-export class Shovel extends Machine {
+class Shovel extends Machine {
     public static basePrice = 1;
 
     static readonly label = "Shovel";
@@ -147,7 +155,7 @@ export class Shovel extends Machine {
     deserialize(state: any) { }
 }
 
-export class AutoDirtSeller extends Machine {
+class AutoDirtSeller extends Machine {
     static readonly basePrice = 5;
     static readonly label = "Auto Dirt Seller";
     powerUse = 1;
@@ -171,7 +179,7 @@ export class AutoDirtSeller extends Machine {
     deserialize(state: any) { }
 }
 
-export class DirtSeller extends Machine {
+class DirtSeller extends Machine {
     public static basePrice = 1;
     static readonly label = "Dirt Seller";
     salePrice = 1;
@@ -196,7 +204,7 @@ export class DirtSeller extends Machine {
     deserialize(state: any): void { }
 }
 
-export class CrankGenerator extends Machine {
+class CrankGenerator extends Machine {
     static readonly label = "Crank Generator";
     public static basePrice = 10;
     public generationRate = 1;
@@ -224,7 +232,9 @@ export class CrankGenerator extends Machine {
 
 // lookup for constructors by name
 // also runs a bunch of type shenanigans
-export const allMachines = {
+export const allMachines: {
+    readonly [code: string]: MachineConstructor
+} = {
     SolarPanel: SolarPanel,
     Digger: Digger, 
     AutoDirtSeller: AutoDirtSeller,
@@ -232,7 +242,3 @@ export const allMachines = {
     CrankGenerator: CrankGenerator,
     Shovel: Shovel,
 };
-
-export type SpecificMachine = SolarPanel | Digger | AutoDirtSeller | CrankGenerator | Shovel | DirtSeller;
-
-export type MachineCode = keyof typeof allMachines;

@@ -1,7 +1,7 @@
 import Cell from "cell";
 import { setText } from "domutil";
 import { IGameState } from "commontypes";
-import * as Machine from "machine";
+import { MachineConstructor, allMachines } from "machine";
 import {returnOf} from "util";
 
 export default class GameState implements IGameState {
@@ -16,6 +16,20 @@ export default class GameState implements IGameState {
     set money(newMoney: number) {
         this._money = newMoney;
         setText("#money", newMoney);
+    }
+
+    getAffordableMachines(): MachineConstructor[] {
+        for (var i = 0; i < this._machineTypes.length; i++) {
+            if (this._machineTypes[i].basePrice > this.money) break;
+        }
+        return this._machineTypes.slice(0, i);
+    }
+
+    private _machineTypes: MachineConstructor[];
+    constructor() {
+        let codes = Object.keys(allMachines) as string[];
+        this._machineTypes = codes.map(c => allMachines[c]);
+        this._machineTypes.sort((a, b) => a.basePrice - b.basePrice);
     }
 
     allCells() {
@@ -41,7 +55,7 @@ export default class GameState implements IGameState {
         this.hour = serialized.hour;
         this.money = serialized.money;
 
-        this.allCells().forEach(c => c.removeElement());
+        this.allCells().forEach(c => c.dispose());
         this.cells = serialized.cells.map(row => 
             row.map(cell => {
                 if (!cell) return cell;

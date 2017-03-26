@@ -1,4 +1,4 @@
-import { SpecificMachine, allMachines, MachineCode } from "machine";
+import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
 import { setText } from "domutil";
 import { returnOf } from "util";
@@ -40,8 +40,9 @@ class CellResource {
 export default class Cell implements ICell {
     readonly state: IGameState;
     capacity: number;
-    private _machines: SpecificMachine[] = [];
-    machines: ReadonlyArray<SpecificMachine> = this._machines;
+
+    private _machines: Machine[] = [];
+    machines: ReadonlyArray<Machine> = this._machines;
     
     private _power = 0;
     get power() { return this._power; }
@@ -89,11 +90,7 @@ export default class Cell implements ICell {
                     out lol
                 </div>
                 <div class=buy-section>
-                    ${Object.keys(allMachines)
-                        .map((k: MachineCode) => `<a href="javascript:" data-buy-machine="${k}">${k} - §${ allMachines[k].basePrice }</a><br>`)
-                        .join('')}
                 </div>
-
             </div>`;
         let container = document.createElement("div");
         container.innerHTML = template;
@@ -105,11 +102,10 @@ export default class Cell implements ICell {
 
             let buyMachine = target.getAttribute("data-buy-machine");
             if (buyMachine && buyMachine in allMachines) {
-                let code = buyMachine as MachineCode;
-                let basePrice = allMachines[code].basePrice;
+                let basePrice = allMachines[buyMachine].basePrice;
                 if (this.state.money >= basePrice) {
                     this.state.money -= basePrice;
-                    this.addMachine(code);
+                    this.addMachine(buyMachine);
                 }
             }
         });
@@ -146,7 +142,7 @@ export default class Cell implements ICell {
         });
     }
 
-    removeElement() {
+    dispose() {
         this.element.parentNode!.removeChild(this.element);
     }
 
@@ -157,11 +153,15 @@ export default class Cell implements ICell {
     }
 
     tick() {
+        this.element.querySelector(".buy-section")!.innerHTML = this.state.getAffordableMachines()
+            .map(ctor => `<a href="javascript:" data-buy-machine="${ getMachineTypeCode(ctor) }">${ ctor.label } - §${ ctor.basePrice }</a><br>`)
+            .join('');
+
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
     }
 
-    addMachine(code: MachineCode): SpecificMachine {
+    addMachine(code: string): Machine {
         let ctor = allMachines[code];
         let machine = new ctor(this.state, this, this.getMachineElement());
         this._machines.push(machine);
