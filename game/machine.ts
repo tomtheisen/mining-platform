@@ -1,4 +1,4 @@
-import { IGameState, ICell, ResourceType, MachineMetadata } from "commontypes";
+import { IGameState, ICell, IMachine, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
 
 export interface MachineConstructor extends Function, MachineMetadata {
@@ -13,7 +13,7 @@ export function getMachineTypeCode(ctor: MachineMetadata): string {
     throw "machine constructor not found";
 }
 
-export abstract class Machine {
+export abstract class Machine implements IMachine {
     protected readonly cell: ICell;
     protected readonly state: IGameState;
 
@@ -53,10 +53,38 @@ export abstract class Machine {
         this.state = state;
         this.cell = cell;
         this.element = element;
+
+        element.addEventListener("click", ev => this.handleClick(ev));
+    }
+
+    private handleClick(ev: MouseEvent) {
+        let target: HTMLElement | null = ev.target as HTMLElement;
+
+        let classes: string[] = [];
+        while (target && target !== this.element) {
+            classes = classes.concat([].map.call(target.classList, (e: string) => e))
+            target = target.parentElement;
+        }
+
+        if (classes.indexOf("delete-button") >= 0) this.cell.removeMachine(this);
     }
 
     getMachineTypeCode(): string {
         return getMachineTypeCode(this.constructor as MachineConstructor);
+    }
+
+    protected disposed = false;
+    dispose(): void {
+        this.element.remove();
+        this.disposed = true;
+    }
+
+    private static unique = 0;
+    protected getMachineLink() {
+        var ctor = allMachines[this.getMachineTypeCode()]
+        return `
+            <input class=machine-selector type=checkbox id=ms${++Machine.unique}>
+            <label for=ms${Machine.unique}>${ctor.label}</label>`;
     }
 }
 
@@ -67,7 +95,7 @@ class SolarPanel extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${SolarPanel.label} +${this.generationRate}🗲`;
+        this.element.innerHTML = `${this.getMachineLink()} +${this.generationRate}🗲`;
     }
 
     power() {
@@ -134,7 +162,10 @@ class Shovel extends Machine {
         super(state, cell, element);
         this.totalHours = 3;
 
-        this.element.innerHTML = this.progressTemplate + `${Shovel.label} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
+        this.element.innerHTML = this.progressTemplate + `
+            ${this.getMachineLink()} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>
+            <div class=machine-details>
+            </div>`;
         this.element.querySelector("button")!.addEventListener("click", ev => this.activate());
     }
 
@@ -165,7 +196,7 @@ class AutoDirtSeller extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${AutoDirtSeller.label} -1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`;
+        this.element.innerHTML = `${this.getMachineLink()} -1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`;
     }
 
     power() {}
@@ -188,7 +219,11 @@ class DirtSeller extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${DirtSeller.label} <button>-1${ResourceType.dirt.symbol} +§${this.salePrice}</button>`;
+        this.element.innerHTML = 
+            `${this.getMachineLink()} <button>-1${ResourceType.dirt.symbol} +§${this.salePrice}</button>
+            <div class=machine-details>
+                <button class=delete-button><i class="fa fa-times"></i></button>
+            </div>`;
         this.element.querySelector("button")!.addEventListener("click", ev => {
             if (!this.running && this.cell.removeResource(ResourceType.dirt, 1)) {
                 this.running = true;
@@ -214,7 +249,7 @@ class CrankGenerator extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${CrankGenerator.label} <button>+${this.generationRate}🗲</button>`;
+        this.element.innerHTML = `${this.getMachineLink()} <button>+${this.generationRate}🗲</button>`;
         this.element.querySelector("button")!.addEventListener("click", (ev) => {
             if (this.crankedThisTick) return;
             this.cell.power += this.generationRate;

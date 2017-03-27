@@ -25,6 +25,13 @@ export interface ICell {
     addResource(type: ResourceType, amount: number): void;
     getResource(type: ResourceType): number;
     removeResource(type: ResourceType, amount: number): boolean;
+    removeMachine(machine: IMachine): void;
+}
+
+export interface IMachine {
+    readonly running: boolean;
+    readonly elapsed: number;
+    getMachineTypeCode(): string;
 }
 
 export class ResourceType {

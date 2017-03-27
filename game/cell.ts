@@ -1,7 +1,7 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
 import { setText } from "domutil";
-import { returnOf } from "util";
+import { returnOf, Subscriptions } from "util";
 
 const width = 13;
 const height = 16;
@@ -38,8 +38,16 @@ class CellResource {
 }
 
 export default class Cell implements ICell {
+    readonly props = new Subscriptions<Cell>(this);
+
     readonly state: IGameState;
-    capacity: number;
+
+    private _capacity: number;
+    get capacity() { return this._capacity; }
+    set capacity(value: number) {
+        setText(".capacity", this._capacity = value, this.element);
+        this.props.publish("capacity", value);
+    }
 
     private _machines: Machine[] = [];
     machines: ReadonlyArray<Machine> = this._machines;
@@ -80,18 +88,14 @@ export default class Cell implements ICell {
                 <label for=rs${id} title=inventory><i class="fa fa-cubes"></i></label>
                 <input id=buy${id} type=radio name=${id} data-show=buy>
                 <label for=buy${id} title=add><i class="fa fa-plus-circle"></i></label>
-                <input id=out${id} type=radio name=${id} data-show=out>
-                <label for=out${id} title=output><i class="fa fa-exchange"></i></label>
 
                 <div class=machine-section>
-                    Power: <span class=power>0</span>🗲
+                    <span class=power>0</span>🗲
+                    <span>0</span>/<span class=capacity></span>
                     <ul class=machines></ul>
                 </div>
                 <div class=resource-section>
                     <ul class=resources></ul>
-                </div>
-                <div class=out-section>
-                    out lol
                 </div>
                 <div class=buy-section>
                     ${
@@ -179,6 +183,14 @@ export default class Cell implements ICell {
         let machine = new ctor(this.state, this, this.getMachineElement());
         this._machines.push(machine);
         return machine;
+    }
+
+    removeMachine(machine: Machine): void {
+        let index = this.machines.indexOf(machine);
+        if (index < 0) throw "machine not found to remove";
+        if (!machine) throw `no machine at [${index}] to remove`;
+        machine.dispose();
+        this._machines.splice(index, 1);
     }
 
     addResource(type: ResourceType, quantity: number) {

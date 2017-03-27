@@ -49,10 +49,6 @@ input[data-show=resources]:checked ~ .resource-section {
     display: block;
 }
 
-input[data-show=out]:checked ~ .out-section {
-    display: block;
-}
-
 input[data-show=buy]:checked ~ .buy-section {
     display: block;
 }
@@ -66,6 +62,18 @@ ul.machines > li {
     border: solid black .1em;
     position: relative;
     padding: .2em;
+}
+
+ul.machines > li .machine-selector {
+    display: none;
+}
+
+ul.machines > li .machine-details {
+    display: none;
+}
+
+ul.machines > li .machine-selector:checked ~ .machine-details {
+    display: block;
 }
 
 ul.machines .progress {
