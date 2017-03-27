@@ -52,13 +52,13 @@ export default class Cell implements ICell {
 
     private _row: number;
     set row(value: number) {
-        this.element.style.top = value * height + "em";
+        this.element.style.top = value * height + 1 + "em";
         this._row = value;
     }
 
     private _col: number;
     set col(value: number) {
-        this.element.style.left = value * width + "em";
+        this.element.style.left = value * width + 1 + "em";
         this._col = value;
     }
 
@@ -75,13 +75,13 @@ export default class Cell implements ICell {
         const template = `
             <div class=cell>
                 <input id=mc${id} type=radio checked name=${id} data-show=machines>
-                <label for=mc${id}>mc</label>
+                <label for=mc${id} title=machines><i class="fa fa-industry"></i></label>
                 <input id=rs${id} type=radio name=${id} data-show=resources>
-                <label for=rs${id}>rs</label>
+                <label for=rs${id} title=inventory><i class="fa fa-cubes"></i></label>
                 <input id=buy${id} type=radio name=${id} data-show=buy>
-                <label for=buy${id}>buy</label>
+                <label for=buy${id} title=add><i class="fa fa-plus-circle"></i></label>
                 <input id=out${id} type=radio name=${id} data-show=out>
-                <label for=out${id}>out</label>
+                <label for=out${id} title=output><i class="fa fa-exchange"></i></label>
 
                 <div class=machine-section>
                     Power: <span class=power>0</span>🗲

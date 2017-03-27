@@ -111,6 +111,8 @@ export default class GameState implements IGameState {
     }
 
     reset() {
+        this.allCells().forEach(c => c.dispose());
+
         this.year = this.day = this.hour = 0;
         this.money = 1;
         document.getElementById("cells")!.innerHTML = "";

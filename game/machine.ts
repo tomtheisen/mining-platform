@@ -135,12 +135,14 @@ class Shovel extends Machine {
         this.totalHours = 3;
 
         this.element.innerHTML = this.progressTemplate + `${Shovel.label} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>`;
-        this.element.querySelector("button")!.addEventListener("click", ev => {
-            if (!this.running) {
-                this.running = true;
-                this.elapsed = 0;
-            }
-        });
+        this.element.querySelector("button")!.addEventListener("click", ev => this.activate());
+    }
+
+    activate() {
+        if (!this.running) {
+            this.running = true;
+            this.elapsed = 0;
+        }
     }
 
     power(): void {}

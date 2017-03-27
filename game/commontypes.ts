@@ -38,8 +38,8 @@ export class ResourceType {
         this.symbol = symbol;
     }
 
-    public static readonly dirt = new ResourceType("dirt", "Dirt", "drt");
-    public static readonly junk = new ResourceType("junk", "Junk", "jnk");
+    public static readonly dirt = new ResourceType("dirt", "Dirt", "dt");
+    public static readonly junk = new ResourceType("junk", "Junk", "jk");
 
     public static readonly allTypes: ResourceType[] = [ResourceType.dirt, ResourceType.junk];
 }

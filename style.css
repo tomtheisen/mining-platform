@@ -3,6 +3,10 @@
     box-sizing: border-box;
 }
 
+a:link {
+    text-decoration: none;
+}
+
 input[type=radio] {
     display: none;
 }
@@ -12,7 +16,7 @@ label {
 }
 
 input[type=radio]:checked + label {
-    color: red;
+    color: #933;
 }
 
 #cells {
@@ -27,7 +31,7 @@ input[type=radio]:checked + label {
     background-color: #fff;
     padding: .5em;
     position: absolute;
-    border: solid blue .3em;
+    border: solid #933 .3em;
     width: 12em;
     height: 15em;
     overflow: auto;
@@ -78,5 +82,9 @@ ul.machines .progress {
 
 ul.resources > li {
     border: solid green .1em;
+    padding: .2em;
 }
 
+ul.resources:empty:before {
+    content: 'Inventory empty';
+}
