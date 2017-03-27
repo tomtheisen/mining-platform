@@ -1,0 +1,22 @@
+{
+  "name": "mp",
+  "description": "",
+  "main": "index.html",
+  "authors": [
+    "Tom Theisen <github@tomtheisen.com>"
+  ],
+  "license": "ISC",
+  "homepage": "",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "font-awesome": "^4.7.0",
+    "requirejs": "^2.3.3"
+  }
+}
