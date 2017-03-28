@@ -20,7 +20,7 @@ function load() {
 
 document.getElementById("save-button")!.addEventListener("click", save);
 document.getElementById("load-button")!.addEventListener("click", load);
-document.getElementById("reset-button")!.addEventListener("click", ev => { state.reset() });
+document.getElementById("reset-button")!.addEventListener("click", ev => state.reset() );
 
 window.addEventListener("beforeunload", save);
 

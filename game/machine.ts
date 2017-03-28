@@ -1,5 +1,6 @@
 import { IGameState, ICell, IMachine, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
+import { setText, div, span, input, label } from "domutil";
 
 export interface MachineConstructor extends Function, MachineMetadata {
     new(state: IGameState, cell: ICell, element: HTMLElement): Machine;
@@ -17,7 +18,7 @@ export abstract class Machine implements IMachine {
     protected readonly cell: ICell;
     protected readonly state: IGameState;
 
-    protected readonly progressTemplate = "<div class=progress></div>";
+    protected readonly progressTemplate = div({class: "progress"});
 
     public readonly element: HTMLElement;
     private progressElement?: HTMLElement;
@@ -81,7 +82,10 @@ export abstract class Machine implements IMachine {
 
     private static unique = 0;
     protected getMachineLink() {
-        var ctor = allMachines[this.getMachineTypeCode()]
+        var ctor = allMachines[this.getMachineTypeCode()];
+        // return [input({class: "machine-selector", type: "checkbox", id: "ms" + ++Machine.unique}),
+        //     label({for: "ms" + Machine.unique}, ctor.label)];
+
         return `
             <input class=machine-selector type=checkbox id=ms${++Machine.unique}>
             <label for=ms${Machine.unique}>${ctor.label}</label>`;

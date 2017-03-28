@@ -74,11 +74,10 @@ export default class Cell implements ICell {
     private resources: CellResource[] = [];
 
     static uniqueId = 0;
-    constructor(state: IGameState, capacity = 10) {
+    constructor(state: IGameState, capacity: number) {
         let id = ++Cell.uniqueId;
 
         this.state = state;
-        this.capacity = capacity;
 
         const template = `
             <div class=cell>
@@ -91,7 +90,7 @@ export default class Cell implements ICell {
 
                 <div class=machine-section>
                     <span class=power>0</span>🗲
-                    <span>0</span>/<span class=capacity></span>
+                    <span class=machine-count>0</span>/<span class=capacity></span>
                     <ul class=machines></ul>
                 </div>
                 <div class=resource-section>
@@ -110,6 +109,7 @@ export default class Cell implements ICell {
         let container = document.createElement("div");
         container.innerHTML = template;
         this.element = container.querySelector("*") as HTMLElement;
+        this.capacity = capacity;
 
         let anchors = this.element.querySelector(".buy-section")!.querySelectorAll("a");
         let i = 0;
@@ -126,7 +126,7 @@ export default class Cell implements ICell {
             if (!(target instanceof HTMLElement)) return;
 
             let buyMachine = target.getAttribute("data-buy-machine");
-            if (buyMachine && buyMachine in allMachines) {
+            if (buyMachine && buyMachine in allMachines && this.machines.length < this.capacity) {
                 let basePrice = allMachines[buyMachine].basePrice;
                 if (this.state.money >= basePrice) {
                     this.state.money -= basePrice;
@@ -159,7 +159,9 @@ export default class Cell implements ICell {
 
         this._machines.splice(0);
         serialized.machines.forEach(m => {
-            this.addMachine(m.type).deserialize(m.state);
+            let machine = this.addMachine(m.type);
+            if (!machine) throw "can't deserialize machine because it failed to be added";
+            machine.deserialize(m.state);
         });
     }
 
@@ -178,10 +180,17 @@ export default class Cell implements ICell {
         this.machines.forEach(m => m.run());
     }
 
-    addMachine(code: string): Machine {
+    private updateMachineCount() {
+        setText(".machine-count", this.machines.length, this.element);
+    }
+
+    addMachine(code: string): Machine | null {
+        if (this.machines.length >= this.capacity) return null;
+
         let ctor = allMachines[code];
         let machine = new ctor(this.state, this, this.getMachineElement());
         this._machines.push(machine);
+        this.updateMachineCount();
         return machine;
     }
 
@@ -191,6 +200,7 @@ export default class Cell implements ICell {
         if (!machine) throw `no machine at [${index}] to remove`;
         machine.dispose();
         this._machines.splice(index, 1);
+        this.updateMachineCount();
     }
 
     addResource(type: ResourceType, quantity: number) {

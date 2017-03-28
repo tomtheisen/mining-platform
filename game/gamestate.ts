@@ -117,7 +117,7 @@ export default class GameState implements IGameState {
         this.money = 1;
         document.getElementById("cells")!.innerHTML = "";
 
-        let cell1 = new Cell(this);
+        let cell1 = new Cell(this, 5);
         cell1.addMachine("Shovel");
         //cell1.addMachine("DirtSeller");
 
