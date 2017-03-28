@@ -1,6 +1,6 @@
 import { IGameState, ICell, IMachine, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
-import { setText, div, span, input, label } from "domutil";
+import { setText, div, span, input, label, button, fa } from "domutil";
 
 export interface MachineConstructor extends Function, MachineMetadata {
     new(state: IGameState, cell: ICell, element: HTMLElement): Machine;
@@ -17,8 +17,6 @@ export function getMachineTypeCode(ctor: MachineMetadata): string {
 export abstract class Machine implements IMachine {
     protected readonly cell: ICell;
     protected readonly state: IGameState;
-
-    protected readonly progressTemplate = div({class: "progress"});
 
     public readonly element: HTMLElement;
     private progressElement?: HTMLElement;
@@ -81,15 +79,22 @@ export abstract class Machine implements IMachine {
     }
 
     private static unique = 0;
-    protected getMachineLink() {
+    protected addMachineLink() {
         var ctor = allMachines[this.getMachineTypeCode()];
-        // return [input({class: "machine-selector", type: "checkbox", id: "ms" + ++Machine.unique}),
-        //     label({for: "ms" + Machine.unique}, ctor.label)];
-
-        return `
-            <input class=machine-selector type=checkbox id=ms${++Machine.unique}>
-            <label for=ms${Machine.unique}>${ctor.label}</label>`;
+        this.element.appendChild(input({class: "machine-selector", type: "checkbox", id: "ms" + ++Machine.unique}));
+        this.element.appendChild(label({for: "ms" + Machine.unique}, ctor.label));
     }
+
+    protected addProgressBar() {
+        this.element.appendChild(div({class: "progress"}));
+    }
+
+    protected addDetails(...contents: HTMLElement[]) {
+        let del = button({class: "delete-button"}, fa("fa-times"));
+        let details = div({class: "machine-details"}, del, ...contents);
+        this.element.appendChild(details);
+    }
+
 }
 
 class SolarPanel extends Machine {
@@ -99,7 +104,9 @@ class SolarPanel extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${this.getMachineLink()} +${this.generationRate}🗲`;
+        this.addMachineLink();
+        this.element.appendChild(span({}, `+${this.generationRate}🗲`));
+        this.addDetails();
     }
 
     power() {
@@ -123,7 +130,11 @@ class Digger extends Machine {
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
         this.totalHours = 24;
-        this.element.innerHTML = this.progressTemplate + `${Digger.label} -${this.powerUse}🗲 +${this.dirtDug}${ResourceType.dirt.symbol} (${this.totalHours}h)`;
+
+        this.addProgressBar();
+        this.addMachineLink();
+        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.dirtDug}${ResourceType.dirt.symbol} (${this.totalHours}h)`));
+        this.addDetails();
     }
 
     power() {}
@@ -166,10 +177,11 @@ class Shovel extends Machine {
         super(state, cell, element);
         this.totalHours = 3;
 
-        this.element.innerHTML = this.progressTemplate + `
-            ${this.getMachineLink()} <button>+${this.dirtDug}${ResourceType.dirt.symbol}</button>
-            <div class=machine-details>
-            </div>`;
+        this.addProgressBar();
+        this.addMachineLink();
+        this.element.appendChild(button({}, `+${this.dirtDug}${ResourceType.dirt.symbol}`));
+        this.addDetails();
+
         this.element.querySelector("button")!.addEventListener("click", ev => this.activate());
     }
 
@@ -200,7 +212,10 @@ class AutoDirtSeller extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${this.getMachineLink()} -1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`;
+
+        this.addMachineLink();
+        this.element.appendChild(span({}, `-1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`));
+        this.addDetails();
     }
 
     power() {}
@@ -223,11 +238,11 @@ class DirtSeller extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = 
-            `${this.getMachineLink()} <button>-1${ResourceType.dirt.symbol} +§${this.salePrice}</button>
-            <div class=machine-details>
-                <button class=delete-button><i class="fa fa-times"></i></button>
-            </div>`;
+
+        this.addMachineLink();
+        this.element.appendChild(button({}, `-1${ResourceType.dirt.symbol} +§${this.salePrice}`));
+        this.addDetails();
+
         this.element.querySelector("button")!.addEventListener("click", ev => {
             if (!this.running && this.cell.removeResource(ResourceType.dirt, 1)) {
                 this.running = true;
@@ -253,7 +268,11 @@ class CrankGenerator extends Machine {
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
         super(state, cell, element);
-        this.element.innerHTML = `${this.getMachineLink()} <button>+${this.generationRate}🗲</button>`;
+
+        this.addMachineLink();
+        this.element.appendChild(button({}, `+${this.generationRate}🗲`));
+        this.addDetails();
+
         this.element.querySelector("button")!.addEventListener("click", (ev) => {
             if (this.crankedThisTick) return;
             this.cell.power += this.generationRate;

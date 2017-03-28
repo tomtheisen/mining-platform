@@ -13,7 +13,7 @@ interface AttributeMap {
     [name: string]: string;
 }
 
-function element(name: keyof HTMLElementTagNameMap, contents: AttributeMap, ...args: HtmlContent[]) {
+function element(name: string, contents: AttributeMap, ...args: HtmlContent[]) {
     let el = document.createElement(name);
 
     Object.keys(contents).forEach(attr => el.setAttribute(attr, contents[attr]));
@@ -40,3 +40,10 @@ export function label(attrs: AttributeMap, ...contents: HtmlContent[]) {
     return element("label", attrs, ...contents)
 }
 
+export function button(attrs: AttributeMap, ...contents: HtmlContent[]) {
+    return element("button", attrs, ...contents)
+}
+
+export function fa(faIcon: string) {
+    return element("i", {class: "fa " + faIcon});
+}
