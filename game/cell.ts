@@ -1,30 +1,52 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText } from "domutil";
+import { setText, div, span } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 13;
 const height = 16;
 
 class CellResource {
+    private readonly historyTicks = 24;
+
     type: ResourceType;
+
     private _quantity: number = 0;
     get quantity() { return this._quantity; }
     set quantity(value: number) {
         setText(".quantity", this._quantity = value, this.element);
     }
 
+    private quantityHistory: number[] = [];
+
     element: HTMLElement;
 
     constructor(type: ResourceType, element: HTMLElement, quantity: number = 0) {
-        element.innerHTML =  `<span class=quantity>0</span>${type.symbol} (${type.name})`;
+        element.appendChild(span({class: "quantity"}, "0"));
+        element.appendChild(span({}, `${type.symbol} (${type.name})`));
 
         this.type = type;
         this.element = element;
         this.quantity = quantity;
     }
 
-    remove() {
+    tick() {
+        this.quantityHistory.push(this.quantity);
+        if (this.quantityHistory.length > this.historyTicks) {
+            this.quantityHistory.shift();
+        }
+    }
+
+    historyEmpty() {
+        return this.quantityHistory.reduce((empty, item) => empty && item === 0, true);
+    }
+
+    averageRate() {
+        const hist = this.quantityHistory;
+        return (hist[hist.length - 1] - hist[0]) / (hist.length - 1);
+    }
+
+    dispose() {
         this.element.remove();
     }
 
@@ -178,6 +200,15 @@ export default class Cell implements ICell {
     tick() {
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
+
+        for (let i=0; i<this.resources.length; i++) {
+            let resource = this.resources[i];
+            resource.tick();
+            if (resource.historyEmpty()) {
+                resource.dispose();
+                this.resources.splice(i--, 1);
+            }
+        }
     }
 
     private updateMachineCount() {
@@ -224,20 +255,14 @@ export default class Cell implements ICell {
     }
 
     removeResource(type: ResourceType, quantity: number) {
-        let i = 0;
         for (let r of this.resources) {
             if (r.type === type) {
                 if (r.quantity >= quantity) {
                     r.quantity -= quantity;
-                    if (r.quantity === 0) {
-                        r.remove();
-                        this.resources.splice(i, 1);
-                    }
                     return true;
                 }
                 return false;
             }
-            i += 1;
         }
         return false;
     }

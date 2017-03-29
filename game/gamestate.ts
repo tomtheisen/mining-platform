@@ -29,6 +29,8 @@ export default class GameState implements IGameState {
     readonly props = new Subscriptions<GameState>(this);
 
     cells: Cell[][] = [];
+    moneyHistory: number[] = [];
+    private readonly historyLength = 24;
 
     year: number;
     day: number;
@@ -108,6 +110,13 @@ export default class GameState implements IGameState {
         setText("#hour", this.hour);
 
         this.allCells().forEach(p => p.tick());
+
+        const hist = this.moneyHistory;
+        hist.push(this.money);
+        if (hist.length > this.historyLength) hist.shift();
+        let rate = (hist[hist.length - 1] - hist[0]) / (this.historyLength - 1);
+        let rateFormatted = (rate >= 0 ? "+" : "-") + Math.abs(rate).toFixed(2);
+        setText("#money-rate", rateFormatted);
     }
 
     reset() {
