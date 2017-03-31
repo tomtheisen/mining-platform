@@ -127,6 +127,8 @@ export default class GameState implements IGameState {
         document.getElementById("cells")!.innerHTML = "";
 
         let cell1 = new Cell(this, 5);
+        cell1.maxPower = 10;
+        cell1.resourceSlots = 3;
         cell1.addMachine("Shovel");
         //cell1.addMachine("DirtSeller");
 

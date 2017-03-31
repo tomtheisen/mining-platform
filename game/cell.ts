@@ -1,6 +1,6 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText, div, span } from "domutil";
+import { setText, div, span, text } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 13;
@@ -22,8 +22,10 @@ class CellResource {
     element: HTMLElement;
 
     constructor(type: ResourceType, element: HTMLElement, quantity: number = 0) {
-        element.appendChild(span({class: "quantity"}, "0"));
-        element.appendChild(span({}, `${type.symbol} (${type.name})`));
+        element.appendChild(span({title: type.name}, 
+            span({class: "quantity"}, "0"),
+            type.symbol
+        ));
 
         this.type = type;
         this.element = element;
@@ -47,7 +49,7 @@ class CellResource {
     }
 
     dispose() {
-        this.element.remove();
+        this.element.innerHTML = "";
     }
 
     serialize() {
@@ -77,7 +79,25 @@ export default class Cell implements ICell {
     private _power = 0;
     get power() { return this._power; }
     set power(value: number) {
-        setText(".power", this._power = value, this.element);
+        setText(".power", this._power = Math.min(value, this.maxPower), this.element);
+    }
+
+    private _maxPower = 0;
+    get maxPower() { return this._maxPower; }
+    set maxPower(value: number) {
+        this.power = this.power;
+        setText(".max-power", this._maxPower = value, this.element);
+        this.props.publish("maxPower", value);
+    }
+
+    private _resourceSlots = 0;
+    get resourceSlots() { return this._resourceSlots; }
+    set resourceSlots(value: number) {
+        let el = this.element.querySelector(".resources")!;
+        while (el.querySelectorAll("*").length < value) el.appendChild(span({}));
+        while (el.querySelectorAll("*").length > value) el.removeChild(el.lastChild!);
+        this._resourceSlots = value;
+        this.props.publish("resourceSlots", value);
     }
 
     private _row: number;
@@ -105,18 +125,21 @@ export default class Cell implements ICell {
             <div class=cell>
                 <input id=mc${id} type=radio checked name=${id} data-show=machines>
                 <label for=mc${id} title=machines><i class="fa fa-industry"></i></label>
+                <!--
                 <input id=rs${id} type=radio name=${id} data-show=resources>
                 <label for=rs${id} title=inventory><i class="fa fa-cubes"></i></label>
+                -->
                 <input id=buy${id} type=radio name=${id} data-show=buy>
                 <label for=buy${id} title=add><i class="fa fa-plus-circle"></i></label>
 
                 <div class=machine-section>
-                    <span class=power>0</span>🗲
+                    <span class=power></span>🗲/<span class=max-power></span>
                     <span class=machine-count>0</span>/<span class=capacity></span>
+                    <div class=resources></div>
                     <ul class=machines></ul>
                 </div>
                 <div class=resource-section>
-                    <ul class=resources></ul>
+                    
                 </div>
                 <div class=buy-section>
                     ${
@@ -138,7 +161,12 @@ export default class Cell implements ICell {
         for (let machine of this.state.machineTypes) {
             let anchor = anchors.item(i++);
             machine.props.subscribe("affordable", isAffordable => {
-                anchor.style.display = isAffordable ? "initial" : "none";
+                if (isAffordable) {
+                    anchor.classList.remove("disabled");
+                } else {
+                    anchor.classList.add("disabled");
+                }
+                //anchor.style.display = isAffordable ? "initial" : "none";
                 return true;
             });
         }
@@ -161,6 +189,8 @@ export default class Cell implements ICell {
     serialize() {
         return {
             power: this.power,
+            maxPower: this.maxPower,
+            resourceSlots: this.resourceSlots,
             capacity: this.capacity,
             resources: this.resources.map(r => r.serialize()),
             machines: this.machines.map(m => ({ type: m.getMachineTypeCode(), state: m.serialize() }))
@@ -170,8 +200,10 @@ export default class Cell implements ICell {
         const serializeType = returnOf(this.serialize);
         let serialized = s as typeof serializeType;
 
+        this.maxPower = serialized.maxPower;
         this.power = serialized.power;
         this.capacity = serialized.capacity;
+        this.resourceSlots = serialized.resourceSlots;
 
         this.resources.splice(0);
         serialized.resources.forEach(r => {
@@ -234,17 +266,20 @@ export default class Cell implements ICell {
         this.updateMachineCount();
     }
 
-    addResource(type: ResourceType, quantity: number) {
+    addResource(type: ResourceType, quantity: number): boolean {
         for (let r of this.resources) {
             if (r.type === type) {
                 r.quantity += quantity;
-                return;
+                return true;
             }
         }
-        let li = document.createElement("li");
-        this.element.querySelector(".resources")!.appendChild(li);
-        let newResource = new CellResource(type, li, quantity);
+
+        if (this.resources.length >= this.resourceSlots) return false;
+
+        let el = this.element.querySelectorAll(".resources > *")[this.resources.length] as HTMLElement;
+        let newResource = new CellResource(type, el, quantity);
         this.resources.push(newResource);
+        return true;
     }
 
     getResource(type: ResourceType): number {
@@ -254,7 +289,7 @@ export default class Cell implements ICell {
         return 0;
     }
 
-    removeResource(type: ResourceType, quantity: number) {
+    removeResource(type: ResourceType, quantity: number): boolean {
         for (let r of this.resources) {
             if (r.type === type) {
                 if (r.quantity >= quantity) {

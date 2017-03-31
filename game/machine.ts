@@ -124,7 +124,7 @@ class SolarPanel extends Machine {
 class Digger extends Machine {
     static readonly basePrice = 10;
     static readonly label = "Dirt Digger";
-    public powerUse = 10;
+    public powerUse = 4;
     public dirtDug = 2;
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {

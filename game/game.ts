@@ -23,6 +23,7 @@ document.getElementById("load-button")!.addEventListener("click", load);
 document.getElementById("reset-button")!.addEventListener("click", ev => state.reset() );
 
 window.addEventListener("beforeunload", save);
+setInterval(save, 60000);
 
 load();
 setInterval(() => state.tick(), 500);

@@ -7,6 +7,15 @@ a:link {
     text-decoration: none;
 }
 
+.disabled {
+    cursor: not-allowed;
+    color: #aaa;
+}
+
+button {
+    padding: 1px 2px;
+}
+
 input[type=radio] {
     display: none;
 }
@@ -65,6 +74,10 @@ ul.machines > li {
     padding: .2em;
 }
 
+ul.machines > li > button {
+    float: right;
+}
+
 ul.machines > li .machine-selector {
     display: none;
 }
@@ -89,11 +102,17 @@ ul.machines .progress {
     transition-property: width;
 }
 
-ul.resources > li {
-    border: solid green .1em;
-    padding: .2em;
+.resources > * {
+    display: inline-block;
+
+    background-color: #226;
+    color: #ddd;
+    padding-left: .3em;
+    padding-right: .3em;
+    margin-right: .5em;
+    min-width: 1.5em;
 }
 
-ul.resources:empty:before {
-    content: 'Inventory empty';
+.resources > *:empty::before {
+    content: '\a0';
 }

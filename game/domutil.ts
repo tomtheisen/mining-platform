@@ -19,7 +19,7 @@ function element(name: string, contents: AttributeMap, ...args: HtmlContent[]) {
     Object.keys(contents).forEach(attr => el.setAttribute(attr, contents[attr]));
 
     for (let arg of args) {
-        el.appendChild(typeof arg === "string" ? document.createTextNode(arg) : arg);
+        el.appendChild(typeof arg === "string" ? text(arg) : arg);
     }
     return el;
 }
@@ -46,4 +46,8 @@ export function button(attrs: AttributeMap, ...contents: HtmlContent[]) {
 
 export function fa(faIcon: string) {
     return element("i", {class: "fa " + faIcon});
+}
+
+export function text(contents: string) {
+    return document.createTextNode(contents);
 }
