@@ -74,7 +74,7 @@ export abstract class Machine implements IMachine {
 
     protected disposed = false;
     dispose(): void {
-        this.element.remove();
+        this.element.innerHTML = "";
         this.disposed = true;
     }
 
@@ -222,7 +222,7 @@ class AutoDirtSeller extends Machine {
 
     run() {
         if (this.cell.power >= this.powerUse && this.cell.removeResource(ResourceType.dirt, 1)) {
-            this.state.money += this.salePrice;
+            this.state.addMoney(this.salePrice);
             this.cell.power -= this.powerUse;
         }
     }
@@ -246,7 +246,7 @@ class DirtSeller extends Machine {
         this.element.querySelector("button")!.addEventListener("click", ev => {
             if (!this.running && this.cell.removeResource(ResourceType.dirt, 1)) {
                 this.running = true;
-                this.state.money += this.salePrice;
+                this.state.addMoney(this.salePrice);
             }
         })
     }

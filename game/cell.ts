@@ -1,6 +1,6 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText, div, span, text } from "domutil";
+import { setText, div, span, text, li } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 13;
@@ -69,6 +69,10 @@ export default class Cell implements ICell {
     private _capacity: number;
     get capacity() { return this._capacity; }
     set capacity(value: number) {
+        let el = this.element.querySelector(".machines")!;
+        while (el.querySelectorAll("*").length < value) el.appendChild(li({}));
+        while (el.querySelectorAll("*").length > value) el.removeChild(el.lastChild!);
+
         setText(".capacity", this._capacity = value, this.element);
         this.props.publish("capacity", value);
     }
@@ -178,10 +182,7 @@ export default class Cell implements ICell {
             let buyMachine = target.getAttribute("data-buy-machine");
             if (buyMachine && buyMachine in allMachines && this.machines.length < this.capacity) {
                 let basePrice = allMachines[buyMachine].basePrice;
-                if (this.state.money >= basePrice) {
-                    this.state.money -= basePrice;
-                    this.addMachine(buyMachine);
-                }
+                if (this.state.removeMoney(basePrice)) this.addMachine(buyMachine);
             }
         });
     }
@@ -223,12 +224,6 @@ export default class Cell implements ICell {
         this.element.parentNode!.removeChild(this.element);
     }
 
-    private getMachineElement(): HTMLElement {
-        let li = document.createElement("li");
-        this.element.querySelector(".machines")!.appendChild(li);
-        return li;
-    }
-
     tick() {
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
@@ -251,7 +246,9 @@ export default class Cell implements ICell {
         if (this.machines.length >= this.capacity) return null;
 
         let ctor = allMachines[code];
-        let machine = new ctor(this.state, this, this.getMachineElement());
+        // first empty slot <li>
+        let el = this.element.querySelectorAll(".machines > *")[this.machines.length] as HTMLElement;
+        let machine = new ctor(this.state, this, el);
         this._machines.push(machine);
         this.updateMachineCount();
         return machine;

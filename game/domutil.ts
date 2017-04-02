@@ -40,6 +40,10 @@ export function label(attrs: AttributeMap, ...contents: HtmlContent[]) {
     return element("label", attrs, ...contents)
 }
 
+export function li(attrs: AttributeMap, ...contents: HtmlContent[]) {
+    return element("li", attrs, ...contents);
+}
+
 export function button(attrs: AttributeMap, ...contents: HtmlContent[]) {
     return element("button", attrs, ...contents)
 }

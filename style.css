@@ -66,6 +66,7 @@ input[data-show=buy]:checked ~ .buy-section {
 ul {
     list-style-type: none;
     padding: 0;
+    margin: .5em 0;
 }
 
 ul.machines > li {
@@ -100,6 +101,10 @@ ul.machines .progress {
     transition-duration: .5s;
     transition-timing-function: linear;
     transition-property: width;
+}
+
+ul.machines > li:empty::before {
+    content: '\a0';
 }
 
 .resources > * {

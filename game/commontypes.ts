@@ -12,11 +12,14 @@ export interface IMachineConstructorState {
 }
 
 export interface IGameState {
-    money: number;
+    readonly money: number;
     readonly year: number;
     readonly day: number;
     readonly hour: number;
     readonly machineTypes: ReadonlyArray<IMachineConstructorState>;
+
+    addMoney(value: number): void;
+    removeMoney(value: number): boolean;
 }
 
 export interface ICell {

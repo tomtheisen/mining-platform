@@ -31,6 +31,7 @@ export default class GameState implements IGameState {
     cells: Cell[][] = [];
     moneyHistory: number[] = [];
     private readonly historyLength = 24;
+    private paymentRatio = 1;
 
     year: number;
     day: number;
@@ -38,11 +39,21 @@ export default class GameState implements IGameState {
 
     private _money: number;
     get money() { return this._money; }
-    set money(value: number) {
+    private setMoney(value: number) {
         let notify = this._money !== value;
         this._money = value;
         setText("#money", value);
         if (notify) this.props.publish("money", value);
+    }
+
+    addMoney(value: number) {
+        this.setMoney(this.money + this.paymentRatio * value);
+    }
+
+    removeMoney(value: number): boolean {
+        if (this.money < value) return false;
+        this.setMoney(this.money - value);
+        return true;
     }
 
     machineTypes: ReadonlyArray<MachineConstructorState>;
@@ -74,7 +85,7 @@ export default class GameState implements IGameState {
         this.year = serialized.year;
         this.day = serialized.day;
         this.hour = serialized.hour;
-        this.money = serialized.money;
+        this.setMoney(serialized.money);
 
         this.allCells().forEach(c => c.dispose());
         this.cells = serialized.cells.map(row => 
@@ -123,7 +134,7 @@ export default class GameState implements IGameState {
         this.allCells().forEach(c => c.dispose());
 
         this.year = this.day = this.hour = 0;
-        this.money = 1;
+        this.setMoney(1);
         document.getElementById("cells")!.innerHTML = "";
 
         let cell1 = new Cell(this, 5);
