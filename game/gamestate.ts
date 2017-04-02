@@ -126,6 +126,7 @@ export default class GameState implements IGameState {
         hist.push(this.money);
         if (hist.length > this.historyLength) hist.shift();
         let rate = (hist[hist.length - 1] - hist[0]) / (this.historyLength - 1);
+        rate = rate || 0;
         let rateFormatted = (rate >= 0 ? "+" : "-") + Math.abs(rate).toFixed(2);
         setText("#money-rate", rateFormatted);
     }

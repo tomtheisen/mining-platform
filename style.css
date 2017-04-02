@@ -42,8 +42,6 @@ input[type=radio]:checked + label {
     padding: .5em;
     position: absolute;
     border: solid #933 .3em;
-    width: 12em;
-    height: 15em;
     overflow: auto;
 }
 
@@ -72,7 +70,10 @@ ul {
 ul.machines > li {
     border: solid black .1em;
     position: relative;
+    z-index: 0; /* stacking context */
     padding: .2em;
+    font-size: 80%;
+    overflow: hidden;
 }
 
 ul.machines > li > button {
@@ -95,12 +96,10 @@ ul.machines .progress {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: green;
-    height: .1em;
+    z-index: -1;
+    height: 10em;
     width: 0;
-    transition-duration: .5s;
-    transition-timing-function: linear;
-    transition-property: width;
+    background-color: #cde;
 }
 
 ul.machines > li:empty::before {

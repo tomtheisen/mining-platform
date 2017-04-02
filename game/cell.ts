@@ -3,7 +3,7 @@ import { IGameState, ICell, ResourceType } from "commontypes";
 import { setText, div, span, text, li } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
-const width = 13;
+const width = 16;
 const height = 16;
 
 class CellResource {
@@ -40,7 +40,8 @@ class CellResource {
     }
 
     historyEmpty() {
-        return this.quantityHistory.reduce((empty, item) => empty && item === 0, true);
+        return (this.quantityHistory.length === this.historyTicks 
+            && this.quantityHistory.reduce((a, b) => a + b, 0) === 0);
     }
 
     averageRate() {
@@ -73,8 +74,7 @@ export default class Cell implements ICell {
         while (el.childNodes.length < value) el.appendChild(li({}));
         while (el.childNodes.length > value) el.removeChild(el.lastChild!);
 
-        setText(".capacity", this._capacity = value, this.element);
-        this.props.publish("capacity", value);
+        this.props.publish("capacity", this._capacity = value);
     }
 
     private _machines: Machine[] = [];
@@ -126,7 +126,7 @@ export default class Cell implements ICell {
         this.state = state;
 
         const template = `
-            <div class=cell>
+            <div class=cell style="width: ${width - 1}em; height: ${height - 1}em;">
                 <input id=mc${id} type=radio checked name=${id} data-show=machines>
                 <label for=mc${id} title=machines><i class="fa fa-industry"></i></label>
                 <!--
@@ -138,7 +138,6 @@ export default class Cell implements ICell {
 
                 <div class=machine-section>
                     <span class=power></span>🗲/<span class=max-power></span>
-                    <span class=machine-count>0</span>/<span class=capacity></span>
                     <div class=resources></div>
                     <ul class=machines></ul>
                 </div>
@@ -209,6 +208,7 @@ export default class Cell implements ICell {
         this.resources.splice(0);
         serialized.resources.forEach(r => {
             let type = ResourceType.allTypes.filter(t => t.code === r.type)[0];
+            if (!type) throw "attempted to load unknown resource code " + r.type;
             this.addResource(type, r.quantity);
         });
 
@@ -238,10 +238,6 @@ export default class Cell implements ICell {
         }
     }
 
-    private updateMachineCount() {
-        setText(".machine-count", this.machines.length, this.element);
-    }
-
     addMachine(code: string): Machine | null {
         if (this.machines.length >= this.capacity) return null;
 
@@ -250,7 +246,7 @@ export default class Cell implements ICell {
         let el = this.element.querySelectorAll(".machines > *")[this.machines.length] as HTMLElement;
         let machine = new ctor(this.state, this, el);
         this._machines.push(machine);
-        this.updateMachineCount();
+
         return machine;
     }
 
@@ -262,8 +258,6 @@ export default class Cell implements ICell {
         machine.dispose();
         this._machines.splice(index, 1);
         this.capacity = this.capacity;
-
-        this.updateMachineCount();
     }
 
     addResource(type: ResourceType, quantity: number): boolean {
@@ -276,7 +270,7 @@ export default class Cell implements ICell {
 
         if (this.resources.length >= this.resourceSlots) return false;
 
-        let el = this.element.querySelectorAll(".resources > *")[this.resources.length] as HTMLElement;
+        let el = this.element.querySelector(".resources > *:empty") as HTMLElement;
         let newResource = new CellResource(type, el, quantity);
         this.resources.push(newResource);
         return true;

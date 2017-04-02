@@ -25,7 +25,7 @@ export interface IGameState {
 export interface ICell {
     power: number;
 
-    addResource(type: ResourceType, amount: number): void;
+    addResource(type: ResourceType, amount: number): boolean;
     getResource(type: ResourceType): number;
     removeResource(type: ResourceType, amount: number): boolean;
     removeMachine(machine: IMachine): void;
@@ -48,9 +48,12 @@ export class ResourceType {
         this.symbol = symbol;
     }
 
+    public static readonly water = new ResourceType("water", "Water", "wr");
     public static readonly dirt = new ResourceType("dirt", "Dirt", "dt");
+    public static readonly mud = new ResourceType("mud", "Mud", "md");
+    public static readonly brick = new ResourceType("brick", "Brick", "bk");
     public static readonly junk = new ResourceType("junk", "Junk", "jk");
 
-    public static readonly allTypes: ResourceType[] = [ResourceType.dirt, ResourceType.junk];
+    public static readonly allTypes: ResourceType[] = [ResourceType.dirt, ResourceType.junk, ResourceType.water, ResourceType.mud, ResourceType.brick];
 }
 

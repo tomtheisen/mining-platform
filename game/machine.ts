@@ -1,6 +1,6 @@
 import { IGameState, ICell, IMachine, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
-import { setText, div, span, input, label, button, fa } from "domutil";
+import { setText, div, span, input, label, button, fa, text } from "domutil";
 
 export interface MachineConstructor extends Function, MachineMetadata {
     new(state: IGameState, cell: ICell, element: HTMLElement): Machine;
@@ -33,11 +33,8 @@ export abstract class Machine implements IMachine {
     private setProgress() {
         if (!this.progressElement) this.progressElement = this.element.querySelector(".progress") as HTMLElement;
         if (this.progressElement) {
-            // progress bar is animated, so calculate where we want to end up by *next* tick
-            // assuming consistent + 1 progress
-            let percent = (this.elapsed + (this.running ? 1 : 0)) / value(this.totalHours) * 100;
+            let percent = this.elapsed / value(this.totalHours) * 100;
             this.progressElement.style.width = percent + "%";
-            this.progressElement.style.visibility = this.running ? "visible" : "hidden";
         } else {
             console.warn("tried to set progress without a bar", this)
         }
@@ -83,6 +80,7 @@ export abstract class Machine implements IMachine {
         var ctor = allMachines[this.getMachineTypeCode()];
         this.element.appendChild(input({class: "machine-selector", type: "checkbox", id: "ms" + ++Machine.unique}));
         this.element.appendChild(label({for: "ms" + Machine.unique}, ctor.label));
+        this.element.appendChild(text(" "));
     }
 
     protected addProgressBar() {
@@ -90,12 +88,83 @@ export abstract class Machine implements IMachine {
     }
 
     protected addDetails(...contents: HTMLElement[]) {
-        let del = button({class: "delete-button"}, fa("fa-times"));
+        let del = button({class: "delete-button", title: "remove"}, fa("fa-times"));
         let details = div({class: "machine-details"}, del, ...contents);
         this.element.appendChild(details);
     }
-
 }
+
+type ResourceAmount = {
+    type: ResourceType;
+    amount: number;
+};
+
+abstract class PoweredCrafter extends Machine {
+    powerUse: number;
+    amountOut: number;
+    resourceOut: ResourceType;
+    inputs: ResourceAmount[];
+
+    constructor(state: IGameState, cell: ICell, element: HTMLElement, resourceOut: ResourceType, amountOut: number, powerUse: number, hours: number, ...inputs: ResourceAmount[]) {
+        super(state, cell, element);
+        this.resourceOut = resourceOut;
+        this.amountOut = amountOut;
+        this.powerUse = powerUse;
+        this.totalHours = hours;
+        this.inputs = inputs;
+
+        this.addProgressBar();
+        this.addMachineLink();
+        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.amountOut}${this.resourceOut.symbol} (${this.totalHours}h)`));
+        this.addDetails();
+    }
+
+    power() {}
+
+    run() {
+        if (this.running && typeof this.elapsed === "number") {
+            if (++this.elapsed >= value(this.totalHours)) {
+                let success = this.cell.addResource(this.resourceOut, this.amountOut);
+
+                if (success) {
+                    this.running = false;
+                    this.elapsed = 0;
+                }
+            }
+        } else {
+            let sufficient = this.inputs.reduce((acc, { type, amount }) => acc && this.cell.getResource(type) >= amount, true);
+            if (sufficient && this.cell.power >= this.powerUse) {
+                this.inputs.forEach(({type, amount}) => this.cell.removeResource(type, amount));
+                this.cell.power -= this.powerUse;
+                this.running = true;
+                this.elapsed = 0;
+            }
+        }
+    }
+
+    serialize() {
+        return {
+            running: this.running,
+            elapsed: this.elapsed,
+            resourceCode: this.resourceOut.code,
+            amountMined: this.amountOut,
+            powerUse: this.powerUse,
+            totalHours: this.totalHours,
+        };
+    }
+    deserialize(serialized: any) {
+        const serializeType = returnOf(this.serialize);
+        let s = serialized as typeof serializeType;
+        this.running = s.running;
+        this.elapsed = s.elapsed;
+        this.resourceOut = ResourceType.allTypes.filter(r => r.code == s.resourceCode)[0];
+        this.amountOut = s.amountMined;
+        this.powerUse = s.powerUse;
+        this.totalHours = s.totalHours;
+    }
+}
+
+
 
 class SolarPanel extends Machine {
     static readonly basePrice = 100;
@@ -121,49 +190,12 @@ class SolarPanel extends Machine {
     deserialize(state: any) { }
 }
 
-class Digger extends Machine {
+class Digger extends PoweredCrafter {
     static readonly basePrice = 10;
     static readonly label = "Dirt Digger";
-    public powerUse = 4;
-    public dirtDug = 2;
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
-        super(state, cell, element);
-        this.totalHours = 24;
-
-        this.addProgressBar();
-        this.addMachineLink();
-        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.dirtDug}${ResourceType.dirt.symbol} (${this.totalHours}h)`));
-        this.addDetails();
-    }
-
-    power() {}
-
-    run() {
-        if (this.running && typeof this.elapsed === "number") {
-            if (++this.elapsed >= value(this.totalHours)) {
-                this.running = false;
-                this.elapsed = 0;
-                this.cell.addResource(ResourceType.dirt, this.dirtDug);
-            }
-        } else if (this.cell.power >= this.powerUse) {
-            this.cell.power -= this.powerUse;
-            this.running = true;
-            this.elapsed = 0;
-        }
-    }
-
-    serialize() {
-        return {
-            running: this.running,
-            elapsed: this.elapsed,
-        };
-    }
-    deserialize(serialized: any) {
-        const serializeType = returnOf(this.serialize);
-        let s = serialized as typeof serializeType;
-        this.running = s.running;
-        this.elapsed = s.elapsed;
+        super(state, cell, element, ResourceType.dirt, 2, 4, 24);
     }
 }
 
@@ -262,8 +294,9 @@ class DirtSeller extends Machine {
 
 class CrankGenerator extends Machine {
     static readonly label = "Crank Generator";
-    public static basePrice = 10;
-    public generationRate = 1;
+    static basePrice = 10;
+
+    generationRate = 1;
     private crankedThisTick = false;
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {
@@ -290,6 +323,36 @@ class CrankGenerator extends Machine {
     deserialize(state: any) {}
 }
 
+class Well extends PoweredCrafter {
+    static readonly label = "Well";
+    static basePrice = 150;
+
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element, ResourceType.water, 2, 4, 24);
+    }
+}
+
+class MudMixer extends PoweredCrafter {
+    static readonly label = "Mud Mixer";
+    static basePrice = 200;
+
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element, ResourceType.mud, 1, 2, 1, 
+            {type: ResourceType.dirt, amount: 1},
+            {type: ResourceType.water, amount: 1});
+    }
+}
+
+class ElectricBrickKiln extends PoweredCrafter {
+    static readonly label = "Electric Brick Kiln";
+    static basePrice = 300;
+
+    constructor(state: IGameState, cell: ICell, element: HTMLElement) {
+        super(state, cell, element, ResourceType.brick, 1, 10, 24, 
+            {type: ResourceType.mud, amount: 2});
+    }
+}
+
 // lookup for constructors by name
 // also runs a bunch of type shenanigans
 export const allMachines: {
@@ -301,4 +364,7 @@ export const allMachines: {
     DirtSeller: DirtSeller,
     CrankGenerator: CrankGenerator,
     Shovel: Shovel,
+    Well: Well,
+    MudMixer: MudMixer,
+    ElectricBrickKiln: ElectricBrickKiln,
 };
