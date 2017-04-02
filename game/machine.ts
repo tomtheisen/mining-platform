@@ -74,7 +74,7 @@ export abstract class Machine implements IMachine {
 
     protected disposed = false;
     dispose(): void {
-        this.element.innerHTML = "";
+        this.element.remove();
         this.disposed = true;
     }
 

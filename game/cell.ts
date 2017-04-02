@@ -70,8 +70,8 @@ export default class Cell implements ICell {
     get capacity() { return this._capacity; }
     set capacity(value: number) {
         let el = this.element.querySelector(".machines")!;
-        while (el.querySelectorAll("*").length < value) el.appendChild(li({}));
-        while (el.querySelectorAll("*").length > value) el.removeChild(el.lastChild!);
+        while (el.childNodes.length < value) el.appendChild(li({}));
+        while (el.childNodes.length > value) el.removeChild(el.lastChild!);
 
         setText(".capacity", this._capacity = value, this.element);
         this.props.publish("capacity", value);
@@ -98,8 +98,8 @@ export default class Cell implements ICell {
     get resourceSlots() { return this._resourceSlots; }
     set resourceSlots(value: number) {
         let el = this.element.querySelector(".resources")!;
-        while (el.querySelectorAll("*").length < value) el.appendChild(span({}));
-        while (el.querySelectorAll("*").length > value) el.removeChild(el.lastChild!);
+        while (el.childNodes.length < value) el.appendChild(span({}));
+        while (el.childNodes.length > value) el.removeChild(el.lastChild!);
         this._resourceSlots = value;
         this.props.publish("resourceSlots", value);
     }
@@ -258,8 +258,11 @@ export default class Cell implements ICell {
         let index = this.machines.indexOf(machine);
         if (index < 0) throw "machine not found to remove";
         if (!machine) throw `no machine at [${index}] to remove`;
+
         machine.dispose();
         this._machines.splice(index, 1);
+        this.capacity = this.capacity;
+
         this.updateMachineCount();
     }
 
