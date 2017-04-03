@@ -1,4 +1,4 @@
-import Cell from "cell";
+import { Cell, BuyPlaceHolder } from "cell";
 import { setText } from "domutil";
 import { IGameState, IMachineConstructorState } from "commontypes";
 import { MachineConstructor, allMachines } from "machine";
@@ -28,10 +28,15 @@ class MachineConstructorState implements IMachineConstructorState {
 export default class GameState implements IGameState {
     readonly props = new Subscriptions<GameState>(this);
 
+    newCellCapacity = 5;
+    newCellResourceSlots = 3;
+    newCellMaxPower = 10;
+    cellPrice: number = 250;
     cells: Cell[][] = [];
     moneyHistory: number[] = [];
     private readonly historyLength = 24;
     private paymentRatio = 1;
+    private buyPlaceHolders: BuyPlaceHolder[] = [];
 
     year: number;
     day: number;
@@ -76,7 +81,8 @@ export default class GameState implements IGameState {
             day: this.day, 
             hour: this.hour,
             money: this.money,
-            cells: this.cells.map(row => row.map(c => c.serialize()))
+            cellPrice: this.cellPrice,
+            cells: this.cells.map(row => row.map(c => c && c.serialize()))
         };
     }
     deserialize(s: any) {
@@ -85,6 +91,7 @@ export default class GameState implements IGameState {
         this.year = serialized.year;
         this.day = serialized.day;
         this.hour = serialized.hour;
+        this.cellPrice = serialized.cellPrice;
         this.setMoney(serialized.money);
 
         this.allCells().forEach(c => c.dispose());
@@ -99,13 +106,35 @@ export default class GameState implements IGameState {
         this.renumberCells();
     }
 
+    addEmptyCell(row: number, col: number): void {
+        if (!this.cells[row]) this.cells[row] = [];
+        this.buyPlaceHolders = this.buyPlaceHolders.filter(bp => bp.row !== row || bp.col !== col);
+        this.cells[row][col] = new Cell(this, this.newCellCapacity);
+        this.cells[row][col].maxPower = this.newCellMaxPower;
+        this.cells[row][col].resourceSlots = this.newCellResourceSlots;
+        this.renumberCells();
+    }
+
     renumberCells() {
+        let consider = (i: number, j: number) => {
+            if (i >= 0 && j >= 0 && (!this.cells[i] || !this.cells[i][j])) {
+                if (this.buyPlaceHolders.filter(bp => bp.row === i && bp.col === j).length == 0) {
+                    this.buyPlaceHolders.push(new BuyPlaceHolder(this, i, j));
+                }
+            }
+        }
+
         this.cells.forEach((row, i) => {
             row.forEach((cell, j) => {
+                if (!cell) return;
                 cell.row = i;
                 cell.col = j;
-            })
-        })
+                consider(i - 1, j);
+                consider(i + 1, j);
+                consider(i, j - 1);
+                consider(i, j + 1);
+            });
+        });
     }
 
     tick() {
@@ -138,14 +167,10 @@ export default class GameState implements IGameState {
         this.setMoney(1);
         document.getElementById("cells")!.innerHTML = "";
 
-        let cell1 = new Cell(this, 5);
-        cell1.maxPower = 10;
-        cell1.resourceSlots = 3;
+        let cell1 = new Cell(this, this.newCellCapacity);
+        cell1.maxPower = this.newCellMaxPower;
+        cell1.resourceSlots = this.newCellResourceSlots;
         cell1.addMachine("Shovel");
-        //cell1.addMachine("DirtSeller");
-
-        // let cell2 = new Cell(this);
-        // cell2.addMachine("Shovel");
 
         this.cells = [
             [cell1],

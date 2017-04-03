@@ -8,7 +8,7 @@ export function format(n: number) {
     return n.toFixed();
 }
 
-type HtmlContent = HTMLElement | string;
+type HtmlContent = HTMLElement | string | number;
 interface AttributeMap {
     [name: string]: string;
 }
@@ -19,7 +19,9 @@ function element(name: string, contents: AttributeMap, ...args: HtmlContent[]) {
     Object.keys(contents).forEach(attr => el.setAttribute(attr, contents[attr]));
 
     for (let arg of args) {
-        el.appendChild(typeof arg === "string" ? text(arg) : arg);
+        if (typeof arg === "string") el.appendChild(text(arg));
+        else if (typeof arg === "number") el.appendChild(text(format(arg)));
+        else el.appendChild(arg);
     }
     return el;
 }

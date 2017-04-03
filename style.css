@@ -3,6 +3,10 @@
     box-sizing: border-box;
 }
 
+body {
+    margin: 0;
+}
+
 a:link {
     text-decoration: none;
 }
@@ -30,11 +34,21 @@ input[type=radio]:checked + label {
 }
 
 #cells {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     background-color: #eee;
-    width: calc(100vw - 1em);
-    height: calc(100vh - 10em);
-    overflow: scroll;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+}
+
+#game-info {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: .5em 2em;
+    background-color: #eee;
 }
 
 .cell {
@@ -119,4 +133,29 @@ ul.machines > li:empty::before {
 
 .resources > *:empty::before {
     content: '\a0';
+}
+
+.buy-placeholder {
+    background-color: #e7e7e7;
+    position: absolute;
+    padding: 3em;
+    border: solid #ddd .3em;
+    text-align: center;
+    cursor: pointer;
+    color: #888;
+}
+
+.buy-placeholder .label {
+    visibility: hidden;
+}
+
+.buy-placeholder:hover .label {
+    visibility: visible;
+}
+
+.buy-placeholder .watermark {
+    font-size: 6em;
+    color: #d7d7d7;
+    height: 100%;
+    width: 100%;
 }

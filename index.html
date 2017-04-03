@@ -6,7 +6,9 @@
     <link rel=stylesheet href="style.css">
 </head>
 <body>
-    <p>
+    <div id=cells></div>
+
+    <p id=game-info>
         <button id=save-button>save</button>
         <button id=load-button>load</button>
         <button id=reset-button>reset</button>
@@ -14,7 +16,6 @@
         Current date: <span id=year></span>-<span id=day></span> <span id=hour></span>:00
     </p>
 
-    <div id=cells></div>
 
     <script data-main="game/game" src="bower_components/requirejs/require.js"></script>
 </body>

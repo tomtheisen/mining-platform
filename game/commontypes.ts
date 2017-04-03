@@ -17,9 +17,11 @@ export interface IGameState {
     readonly day: number;
     readonly hour: number;
     readonly machineTypes: ReadonlyArray<IMachineConstructorState>;
+    readonly cellPrice: number;
 
     addMoney(value: number): void;
     removeMoney(value: number): boolean;
+    addEmptyCell(row: number, col: number): void;
 }
 
 export interface ICell {

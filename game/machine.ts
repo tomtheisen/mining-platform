@@ -164,8 +164,6 @@ abstract class PoweredCrafter extends Machine {
     }
 }
 
-
-
 class SolarPanel extends Machine {
     static readonly basePrice = 100;
     static readonly label = "Solar Panel";

@@ -1,6 +1,6 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText, div, span, text, li } from "domutil";
+import { setText, div, span, text, li, fa } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 16;
@@ -22,8 +22,8 @@ class CellResource {
     element: HTMLElement;
 
     constructor(type: ResourceType, element: HTMLElement, quantity: number = 0) {
-        element.appendChild(span({title: type.name}, 
-            span({class: "quantity"}, "0"),
+        element.appendChild(span({ title: type.name },
+            span({ class: "quantity" }, "0"),
             type.symbol
         ));
 
@@ -40,7 +40,7 @@ class CellResource {
     }
 
     historyEmpty() {
-        return (this.quantityHistory.length === this.historyTicks 
+        return (this.quantityHistory.length === this.historyTicks
             && this.quantityHistory.reduce((a, b) => a + b, 0) === 0);
     }
 
@@ -59,10 +59,10 @@ class CellResource {
             quantity: this.quantity,
         };
     }
-    deserialize(state: any) {}
+    deserialize(state: any) { }
 }
 
-export default class Cell implements ICell {
+export class Cell implements ICell {
     readonly props = new Subscriptions<Cell>(this);
 
     readonly state: IGameState;
@@ -79,7 +79,7 @@ export default class Cell implements ICell {
 
     private _machines: Machine[] = [];
     machines: ReadonlyArray<Machine> = this._machines;
-    
+
     private _power = 0;
     get power() { return this._power; }
     set power(value: number) {
@@ -106,7 +106,7 @@ export default class Cell implements ICell {
 
     private _row: number;
     set row(value: number) {
-        this.element.style.top = value * height + 1 + "em";
+        this.element.style.top = value * height + 5 + "em";
         this._row = value;
     }
 
@@ -146,11 +146,13 @@ export default class Cell implements ICell {
                 </div>
                 <div class=buy-section>
                     ${
-                        this.state.machineTypes.map(machine => {{
-                            let ctor = machine.type;
-                            let code = getMachineTypeCode(ctor);
-                            return `<a href="javascript:" data-buy-machine="${ code }">${ ctor.label } - §${ ctor.basePrice }</a><br>`;
-                        }}).join('')
+                        this.state.machineTypes.map(machine => {
+                            {
+                                let ctor = machine.type;
+                                let code = getMachineTypeCode(ctor);
+                                return `<a href="javascript:" data-buy-machine="${code}">${ctor.label} - §${ctor.basePrice}</a><br>`;
+                            }
+                        }).join('')
                     }
                 </div>
             </div>`;
@@ -228,7 +230,7 @@ export default class Cell implements ICell {
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
 
-        for (let i=0; i<this.resources.length; i++) {
+        for (let i = 0; i < this.resources.length; i++) {
             let resource = this.resources[i];
             resource.tick();
             if (resource.historyEmpty()) {
@@ -294,5 +296,40 @@ export default class Cell implements ICell {
             }
         }
         return false;
+    }
+}
+
+export class BuyPlaceHolder {
+    state: IGameState;
+    row: number;
+    col: number;
+    disposed = false;
+    element: HTMLElement;
+
+    constructor(state: IGameState, row: number, col: number) {
+        this.state = state;
+        this.row = row;
+        this.col = col;
+
+        let style = `top: ${row * height + 5}em; left: ${col * height + 1}em; width: ${width - 1}em; height: ${height - 1}em;`;
+        this.element = div({ class: "buy-placeholder", style },
+            span({ class: "label" },
+                "Buy for §",
+                span({ class: "buy-cell-price" }, state.cellPrice)),
+            div({ class: "watermark" }, fa("fa-plus-circle"))
+        );
+        document.getElementById("cells")!.appendChild(this.element);
+
+        this.element.addEventListener("click", ev => this.buy());
+    }
+
+    buy() {
+        this.dispose();
+        this.state.addEmptyCell(this.row, this.col);
+    }
+
+    dispose() {
+        this.element.remove();
+        this.disposed = true;
     }
 }
