@@ -22,6 +22,7 @@ export interface IGameState {
     addMoney(value: number): void;
     removeMoney(value: number): boolean;
     addEmptyCell(row: number, col: number): void;
+    removeCell(cell: ICell): void;
 }
 
 export interface ICell {

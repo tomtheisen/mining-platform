@@ -108,14 +108,22 @@ export default class GameState implements IGameState {
 
     addEmptyCell(row: number, col: number): void {
         if (!this.cells[row]) this.cells[row] = [];
-        this.buyPlaceHolders = this.buyPlaceHolders.filter(bp => bp.row !== row || bp.col !== col);
         this.cells[row][col] = new Cell(this, this.newCellCapacity);
         this.cells[row][col].maxPower = this.newCellMaxPower;
         this.cells[row][col].resourceSlots = this.newCellResourceSlots;
         this.renumberCells();
     }
 
+    removeCell(cell: Cell): void {
+        let {row, col} = cell;
+        delete this.cells[row][col];
+        this.renumberCells();
+    }
+
     renumberCells() {
+        this.buyPlaceHolders.forEach(bp => bp.dispose());
+        this.buyPlaceHolders = [];
+
         let consider = (i: number, j: number) => {
             if (i >= 0 && j >= 0 && (!this.cells[i] || !this.cells[i][j])) {
                 if (this.buyPlaceHolders.filter(bp => bp.row === i && bp.col === j).length == 0) {

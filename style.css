@@ -59,19 +59,14 @@ input[type=radio]:checked + label {
     overflow: auto;
 }
 
-.machine-section, .resource-section, .out-section, .buy-section {
+.machine-section, .resource-section, .out-section, .buy-section, .settings-section {
     display: none;
 }
 
-input[data-show=machines]:checked ~ .machine-section {
-    display: block;
-}
-
-input[data-show=resources]:checked ~ .resource-section {
-    display: block;
-}
-
-input[data-show=buy]:checked ~ .buy-section {
+input[data-show=machines]:checked ~ .machine-section, 
+input[data-show=resources]:checked ~ .resource-section,
+input[data-show=buy]:checked ~ .buy-section,
+input[data-show=set]:checked ~ .settings-section {
     display: block;
 }
 

@@ -64,8 +64,8 @@ class CellResource {
 
 export class Cell implements ICell {
     readonly props = new Subscriptions<Cell>(this);
-
     readonly state: IGameState;
+    private disposed = false;
 
     private _capacity: number;
     get capacity() { return this._capacity; }
@@ -109,12 +109,14 @@ export class Cell implements ICell {
         this.element.style.top = value * height + 5 + "em";
         this._row = value;
     }
+    get row() { return this._row; }
 
     private _col: number;
     set col(value: number) {
         this.element.style.left = value * width + 1 + "em";
         this._col = value;
     }
+    get col() { return this._col; }
 
     private element: HTMLElement;
     private resources: CellResource[] = [];
@@ -135,6 +137,8 @@ export class Cell implements ICell {
                 -->
                 <input id=buy${id} type=radio name=${id} data-show=buy>
                 <label for=buy${id} title=add><i class="fa fa-plus-circle"></i></label>
+                <input id=set${id} type=radio name=${id} data-show=set>
+                <label for=set${id} title=settings><i class="fa fa-gear"></i></label>
 
                 <div class=machine-section>
                     <span class=power></span>🗲/<span class=max-power></span>
@@ -154,6 +158,9 @@ export class Cell implements ICell {
                             }
                         }).join('')
                     }
+                </div>
+                <div class=settings-section>
+                    <button class=dispose-cell>scrap cell</button>
                 </div>
             </div>`;
         let container = document.createElement("div");
@@ -184,6 +191,10 @@ export class Cell implements ICell {
             if (buyMachine && buyMachine in allMachines && this.machines.length < this.capacity) {
                 let basePrice = allMachines[buyMachine].basePrice;
                 if (this.state.removeMoney(basePrice)) this.addMachine(buyMachine);
+            }
+
+            if (target.classList.contains("dispose-cell")) {
+                this.dispose();
             }
         });
     }
@@ -223,7 +234,11 @@ export class Cell implements ICell {
     }
 
     dispose() {
+        this.machines.forEach(m => m.dispose());
+        this.resources.forEach(r => r.dispose());
         this.element.parentNode!.removeChild(this.element);
+        this.disposed = true;
+        this.state.removeCell(this);
     }
 
     tick() {
