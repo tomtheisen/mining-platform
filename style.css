@@ -9,6 +9,7 @@ body {
 
 a:link {
     text-decoration: none;
+    color: #226;
 }
 
 .disabled {
@@ -17,7 +18,7 @@ a:link {
 }
 
 button {
-    padding: 1px 2px;
+    border-radius: 1em;
 }
 
 input[type=radio] {
@@ -37,7 +38,7 @@ input[type=radio]:checked + label {
     position: absolute;
     top: 0;
     left: 0;
-    background-color: #eee;
+    background-color: #556;
     width: 100vw;
     height: 100vh;
     overflow: auto;
@@ -48,15 +49,43 @@ input[type=radio]:checked + label {
     z-index: 1;
     margin: 0;
     padding: .5em 2em;
-    background-color: #eee;
+    background-color: #334;
+    color: #ccc;
 }
 
 .cell {
-    background-color: #fff;
-    padding: .5em;
+    background-color: #eed;
+    padding: .8em;
     position: absolute;
-    border: solid #933 .3em;
+    border-radius: 1em;
     overflow: auto;
+    color: #333;
+}
+
+.buy-placeholder {
+    background-color: #667;
+    position: absolute;
+    padding: 3em;
+    border: solid #778 .3em;
+    text-align: center;
+    cursor: pointer;
+    color: #223;
+    border-radius: 1em;
+}
+
+.buy-placeholder .label {
+    visibility: hidden;
+}
+
+.buy-placeholder:hover .label {
+    visibility: visible;
+}
+
+.buy-placeholder .watermark {
+    font-size: 6em;
+    color: #778;
+    height: 100%;
+    width: 100%;
 }
 
 .machine-section, .resource-section, .out-section, .buy-section, .settings-section {
@@ -77,12 +106,13 @@ ul {
 }
 
 ul.machines > li {
-    border: solid black .1em;
+    border: solid #eed .1em;
     position: relative;
     z-index: 0; /* stacking context */
     padding: .2em;
     font-size: 80%;
     overflow: hidden;
+    background-color: #ffe;
 }
 
 ul.machines > li > button {
@@ -108,7 +138,7 @@ ul.machines .progress {
     z-index: -1;
     height: 10em;
     width: 0;
-    background-color: #cde;
+    background-color: #ddc;
 }
 
 ul.machines > li:empty::before {
@@ -119,38 +149,14 @@ ul.machines > li:empty::before {
     display: inline-block;
 
     background-color: #226;
+    border-radius: 1em;
     color: #ddd;
-    padding-left: .3em;
-    padding-right: .3em;
+    padding-left: .4em;
+    padding-right: .4em;
     margin-right: .5em;
     min-width: 1.5em;
 }
 
 .resources > *:empty::before {
     content: '\a0';
-}
-
-.buy-placeholder {
-    background-color: #e7e7e7;
-    position: absolute;
-    padding: 3em;
-    border: solid #ddd .3em;
-    text-align: center;
-    cursor: pointer;
-    color: #888;
-}
-
-.buy-placeholder .label {
-    visibility: hidden;
-}
-
-.buy-placeholder:hover .label {
-    visibility: visible;
-}
-
-.buy-placeholder .watermark {
-    font-size: 6em;
-    color: #d7d7d7;
-    height: 100%;
-    width: 100%;
 }

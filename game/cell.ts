@@ -154,7 +154,7 @@ export class Cell implements ICell {
                             {
                                 let ctor = machine.type;
                                 let code = getMachineTypeCode(ctor);
-                                return `<a href="javascript:" data-buy-machine="${code}">${ctor.label} - §${ctor.basePrice}</a><br>`;
+                                return `<button href="javascript:" data-buy-machine="${code}">${ctor.label} - §${ctor.basePrice}</button><br>`;
                             }
                         }).join('')
                     }
@@ -168,7 +168,7 @@ export class Cell implements ICell {
         this.element = container.querySelector("*") as HTMLElement;
         this.capacity = capacity;
 
-        let anchors = this.element.querySelector(".buy-section")!.querySelectorAll("a");
+        let anchors = this.element.querySelectorAll(".buy-section [data-buy-machine]");
         let i = 0;
         for (let machine of this.state.machineTypes) {
             let anchor = anchors.item(i++);
