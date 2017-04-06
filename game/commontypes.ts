@@ -19,6 +19,8 @@ export interface IGameState {
     readonly machineTypes: ReadonlyArray<IMachineConstructorState>;
     readonly cellPrice: number;
 
+    readonly cells: ICell[][]
+
     addMoney(value: number): void;
     removeMoney(value: number): boolean;
     addEmptyCell(row: number, col: number): void;

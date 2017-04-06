@@ -57,3 +57,7 @@ export function fa(faIcon: string) {
 export function text(contents: string) {
     return document.createTextNode(contents);
 }
+
+export function option(value: string, display: string) {
+    return element("option", {value}, display) as HTMLOptionElement;
+}

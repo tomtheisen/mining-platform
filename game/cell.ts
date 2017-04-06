@@ -1,6 +1,6 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText, div, span, text, li, fa } from "domutil";
+import { setText, div, span, text, li, fa, option } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 16;
@@ -50,7 +50,7 @@ class CellResource {
     }
 
     dispose() {
-        this.element.innerHTML = "";
+        this.element.remove();
     }
 
     serialize() {
@@ -161,6 +161,25 @@ export class Cell implements ICell {
                 </div>
                 <div class=settings-section>
                     <button class=dispose-cell>scrap cell</button>
+
+                    <div style="text-align: center;">
+                        <select class="output-chooser north"><option>none</select><br>
+                        <i class="fa fa-arrow-up"></i>
+                    </div>
+                    <div>
+                        <div style="float:left;">
+                            <select class="output-chooser west"><option>none</select>
+                            <i class="fa fa-arrow-left"></i>
+                        </div>
+                        <div style="float:right;">
+                            <i class="fa fa-arrow-right"></i>
+                            <select class="output-chooser east"><option>none</select>
+                        </div>
+                    </div>
+                    <div style="text-align: center; clear: both;">
+                        <i class="fa fa-arrow-down"></i><br>
+                        <select class="output-chooser south"><option>none</select>
+                    </div>
                 </div>
             </div>`;
         let container = document.createElement("div");
@@ -245,12 +264,39 @@ export class Cell implements ICell {
         this.machines.forEach(m => m.power());
         this.machines.forEach(m => m.run());
 
+        // drop orphaned resource slots
         for (let i = 0; i < this.resources.length; i++) {
             let resource = this.resources[i];
             resource.tick();
             if (resource.historyEmpty()) {
                 resource.dispose();
+                this.resourceSlots = this.resourceSlots;
+
+                [].forEach.call(
+                    this.element.querySelectorAll(".output-chooser"),
+                    (select: HTMLSelectElement) => select.options.remove(i + 1));
+
                 this.resources.splice(i--, 1);
+            }
+        }
+
+        const neighbors = [[-1,0],[0,-1],[0,1],[1,0]];
+        for (let i = 0; i < 4; i++) {
+            let select = this.element.querySelectorAll(".output-chooser").item(i) as HTMLSelectElement;
+            let typeCode = select.value;
+            if (!typeCode) continue;
+
+            let row = this.row + neighbors[i][0];
+            let col = this.col + neighbors[i][1];
+            let neighbor = (this.state.cells[row] || [])[col];
+            if  (!neighbor) continue;
+
+            let type = ResourceType.allTypes.filter(t => t.code == typeCode)[0];
+            const outputQuantity = 1;
+            if (this.getResource(type) >= outputQuantity) { 
+                if (neighbor.addResource(type, outputQuantity)) {
+                    this.removeResource(type, outputQuantity);
+                }
             }
         }
     }
@@ -290,6 +336,11 @@ export class Cell implements ICell {
         let el = this.element.querySelector(".resources > *:empty") as HTMLElement;
         let newResource = new CellResource(type, el, quantity);
         this.resources.push(newResource);
+
+        [].forEach.call(
+            this.element.querySelectorAll(".output-chooser"),
+            (select: HTMLSelectElement) => select.options.add(option(type.code, type.name)));
+
         return true;
     }
 
