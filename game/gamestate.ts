@@ -35,12 +35,19 @@ export default class GameState implements IGameState {
     cells: Cell[][] = [];
     moneyHistory: number[] = [];
     private readonly historyLength = 24;
-    private paymentRatio = 1;
     private buyPlaceHolders: BuyPlaceHolder[] = [];
 
     year: number;
     day: number;
     hour: number;
+
+    private _effectiveIncomeRate = 1;
+    get effectiveIncomeRate() { return this._effectiveIncomeRate; }
+    set effectiveIncomeRate(value: number) {
+        this._effectiveIncomeRate = value;
+        this.props.publish("effectiveIncomeRate", value);
+        setText("#income-rate", value.toFixed(3));
+    }
 
     private _money: number;
     get money() { return this._money; }
@@ -52,7 +59,7 @@ export default class GameState implements IGameState {
     }
 
     addMoney(value: number) {
-        this.setMoney(this.money + this.paymentRatio * value);
+        this.setMoney(this.money + this.effectiveIncomeRate * value);
     }
 
     removeMoney(value: number): boolean {
@@ -82,7 +89,7 @@ export default class GameState implements IGameState {
             hour: this.hour,
             money: this.money,
             cellPrice: this.cellPrice,
-            cells: this.cells.map(row => row.map(c => c && c.serialize()))
+            cells: this.cells.map(row => row.map(c => c && c.serialize())),
         };
     }
     deserialize(s: any) {
@@ -122,7 +129,7 @@ export default class GameState implements IGameState {
 
     renumberCells() {
         this.buyPlaceHolders.forEach(bp => bp.dispose());
-        this.buyPlaceHolders = [];
+        this.buyPlaceHolders.splice(0);
 
         let consider = (i: number, j: number) => {
             if (i >= 0 && j >= 0 && (!this.cells[i] || !this.cells[i][j])) {
@@ -132,9 +139,12 @@ export default class GameState implements IGameState {
             }
         }
 
+        let totalCells = 0;
         this.cells.forEach((row, i) => {
             row.forEach((cell, j) => {
                 if (!cell) return;
+
+                totalCells += 1;
                 cell.row = i;
                 cell.col = j;
                 consider(i - 1, j);
@@ -143,6 +153,8 @@ export default class GameState implements IGameState {
                 consider(i, j + 1);
             });
         });
+
+        this.effectiveIncomeRate = 20 / (totalCells + 19);
     }
 
     tick() {

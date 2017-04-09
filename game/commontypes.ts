@@ -34,6 +34,10 @@ export interface ICell {
     getResource(type: ResourceType): number;
     removeResource(type: ResourceType, amount: number): boolean;
     removeMachine(machine: IMachine): void;
+
+    readonly props: Subscriptions<ICell>;
+    readonly row: number;
+    readonly col: number;
 }
 
 export interface IMachine {

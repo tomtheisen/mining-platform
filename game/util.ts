@@ -3,8 +3,8 @@ export function value<T>(arg: T | null | undefined): T {
     return arg;
 }
 
-export function returnOf<T>(fn: (...args: any[]) => T) {
-    return null! && fn();
+export function returnOf<T>(fn: (...args: any[]) => T): T {
+    return null! as T;
 }
 
 export class Subscriptions<T> {

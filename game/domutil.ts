@@ -13,6 +13,8 @@ interface AttributeMap {
     [name: string]: string;
 }
 
+function element<K extends keyof HTMLElementTagNameMap>(name: K, contents: AttributeMap, ...args: HtmlContent[]): HTMLElementTagNameMap[K];
+function element(name: string, contents: AttributeMap, ...args: HtmlContent[]): HTMLElement;
 function element(name: string, contents: AttributeMap, ...args: HtmlContent[]) {
     let el = document.createElement(name);
 
@@ -56,6 +58,10 @@ export function fa(faIcon: string) {
 
 export function text(contents: string) {
     return document.createTextNode(contents);
+}
+
+export function select(attrs: AttributeMap, ...contents: HTMLOptionElement[]) {
+    return element("select", attrs, ...contents);
 }
 
 export function option(value: string, display: string) {

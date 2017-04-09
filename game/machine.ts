@@ -1,6 +1,6 @@
 import { IGameState, ICell, IMachine, ResourceType, MachineMetadata } from "commontypes";
 import { value, returnOf } from "util";
-import { setText, div, span, input, label, button, fa, text } from "domutil";
+import { setText, div, span, input, label, button, fa, text, select, option } from "domutil";
 
 export interface MachineConstructor extends Function, MachineMetadata {
     new(state: IGameState, cell: ICell, element: HTMLElement): Machine;
@@ -88,7 +88,7 @@ export abstract class Machine implements IMachine {
     }
 
     protected addDetails(...contents: HTMLElement[]) {
-        let del = button({class: "delete-button", title: "remove"}, fa("fa-times"));
+        let del = button({class: "delete-button", title: "scrap"}, fa("fa-times"), " scrap");
         let details = div({class: "machine-details"}, del, ...contents);
         this.element.appendChild(details);
     }
@@ -351,6 +351,68 @@ class ElectricBrickKiln extends PoweredCrafter {
     }
 }
 
+class Exporter extends Machine {
+    static basePrice = 100;
+    static label = "Exporter";
+
+    private directionSelect: HTMLSelectElement;
+    private typeSelect: HTMLSelectElement;
+
+    constructor(state: IGameState, cell: ICell, el: HTMLElement) {
+        super(state, cell, el);
+
+        this.directionSelect = select({}, 
+            option("up", "↑"),
+            option("right", "→"),
+            option("down", "↓"),
+            option("left", "←"));
+
+        this.typeSelect = select({}, option("", "none"), ...ResourceType.allTypes.map(t => option(t.code, t.name)));
+
+        this.addMachineLink();
+        this.addDetails(div({}, "Send ", this.typeSelect, " ", this.directionSelect));
+    }
+
+    power(): void { }
+    run(): void {
+        let direction = this.directionSelect.value;
+        let row = this.cell.row;
+        let col = this.cell.col;
+        switch (direction) {
+            case "up": --row; break;
+            case "right": ++col; break;
+            case "down": ++row; break;
+            case "left": --col; break;
+        }
+
+        let neighbor = (this.state.cells[row] || [])[col];
+        if  (!neighbor) return;
+
+        let typeCode = this.typeSelect.value;
+        let type = ResourceType.allTypes.filter(t => t.code == typeCode)[0];
+        if (!type) return;
+
+        const outputQuantity = 1;
+        if (this.cell.getResource(type) >= outputQuantity) { 
+            if (neighbor.addResource(type, outputQuantity)) {
+                this.cell.removeResource(type, outputQuantity);
+            }
+        }
+    }
+    serialize() {
+        return {
+            direction: this.directionSelect.value,
+            type: this.typeSelect.value,
+        };
+    }
+    deserialize(state: any): void {
+        const serializeType = returnOf(this.serialize);
+        let s = state as typeof serializeType;
+        this.directionSelect.value = s.direction;
+        this.typeSelect.value = s.type;
+    }
+}
+
 // lookup for constructors by name
 // also runs a bunch of type shenanigans
 export const allMachines: {
@@ -365,4 +427,5 @@ export const allMachines: {
     Well: Well,
     MudMixer: MudMixer,
     ElectricBrickKiln: ElectricBrickKiln,
+    Exporter: Exporter,
 };
