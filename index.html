@@ -8,16 +8,21 @@
 <body>
     <div id=cells></div>
 
-    <p id=game-info>
-        <!--<button id=save-button>save</button>-->
-        <!--<button id=load-button>load</button>-->
-        <button id=backup-save-button>backup save</button>
-        <button id=backup-load-button>backup load</button>
-        <button id=reset-button>reset</button>
-        Money: §<span id=money></span> 
-        (<span id=money-rate></span> / <span id=income-rate></span>x)
-        Time: <span id=year></span>-<span id=day></span> <span id=hour></span>:00
-    </p>
+    <header>
+        <div id=header-top>
+            Money: §<span id=money></span> 
+            (<span id=money-rate></span> / <span id=income-rate></span>x)
+            Time: <span id=year></span>-<span id=day></span> <span id=hour></span>:00
+        </div>
+
+        <div id=header-details>
+            <button id=save-button>save</button>
+            <button id=load-button>load</button>
+            <button id=backup-save-button>backup save</button>
+            <button id=backup-load-button>backup load</button>
+            <button id=reset-button>reset</button>
+        </div>
+    </header>
 
     <script data-main="game/game" src="bower_components/requirejs/require.js"></script>
 </body>

@@ -1,6 +1,6 @@
 import { Machine, allMachines, getMachineTypeCode } from "machine";
 import { IGameState, ICell, ResourceType } from "commontypes";
-import { setText, div, span, text, li, fa, option } from "domutil";
+import { setText, div, span, text, li, fa, option, img } from "domutil";
 import { returnOf, Subscriptions } from "util";
 
 const width = 16;
@@ -24,7 +24,7 @@ class CellResource {
     constructor(type: ResourceType, element: HTMLElement, quantity: number = 0) {
         element.appendChild(span({ title: type.name },
             span({ class: "quantity" }, "0"),
-            type.symbol
+            type.img
         ));
 
         this.type = type;

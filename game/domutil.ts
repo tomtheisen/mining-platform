@@ -67,3 +67,8 @@ export function select(attrs: AttributeMap, ...contents: HTMLOptionElement[]) {
 export function option(value: string, display: string) {
     return element("option", {value}, display) as HTMLOptionElement;
 }
+
+export function img(attrs: AttributeMap, src: string) {
+    attrs["src"] = src;
+    return element("img", attrs);
+}

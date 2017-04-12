@@ -1,4 +1,5 @@
 import { Subscriptions } from "util";
+import * as domutil from "domutil";
 
 export interface MachineMetadata {
     basePrice: number;
@@ -49,20 +50,22 @@ export interface IMachine {
 export class ResourceType {
     code: string;
     name: string;
-    symbol: string;
+    imgUrl: string;
 
-    constructor(code: string, name: string, symbol: string) {
+    constructor(code: string, name: string, imgUrl: string) {
         this.code = code;
         this.name = name;
-        this.symbol = symbol;
+        this.imgUrl = imgUrl;
     }
 
-    public static readonly water = new ResourceType("water", "Water", "wr");
-    public static readonly dirt = new ResourceType("dirt", "Dirt", "dt");
-    public static readonly mud = new ResourceType("mud", "Mud", "md");
-    public static readonly brick = new ResourceType("brick", "Brick", "bk");
-    public static readonly junk = new ResourceType("junk", "Junk", "jk");
+    get img() { return domutil.img({class: "resource"}, this.imgUrl); }
 
-    public static readonly allTypes: ResourceType[] = [ResourceType.dirt, ResourceType.junk, ResourceType.water, ResourceType.mud, ResourceType.brick];
+    public static readonly water = new ResourceType("water", "Water", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAuklEQVQ4T2NkQAMJmTn/0cWQ+QumT2FE5qNwQBJkGwDT+OTRI7AFX798BtPcPLwoDpKRkwPzYS6Bu4BsA2Aab167Cjb5kWkKmP7w9QeKzaKiomC+ytk5YBrmEkaKDXDx9gOHOszE1QyG+CKBIZThPFge5mJGqhkAsxbmElzOgNkMk4e7gGoGwAxCTwcwPrrLMFxAsgEwDbDAxGUzLEXC5I8f3A9OhPCUSLEBxLoEZjM8FtADhZBL0A0AAJNYhslSofbvAAAAAElFTkSuQmCC");
+    public static readonly dirt = new ResourceType("dirt", "Dirt", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbUlEQVQ4T2NkoBAwUqifYdQABtxhMClI7T8ogI/deQ0O5xWX3mMNL5yBSLYBEXqCYJutVETBNsNc8ODjHzD/xMPPKJZiuIBsA2BOhiUsmM2EXAJ3AdkGoAcWLhsV+FnAjoOFBcyljBQbMOCZCQChw1bXPI4PmAAAAABJRU5ErkJggg==");
+    public static readonly mud = new ResourceType("mud", "Mud", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAg0lEQVQ4T2NkoBAwUqifYRAYMNlH+T+yN+R0zcHcH6+fgGkOURkw/ejySTANk4fpYaTYgJUpdiguePXiKdZwhdmM7hJGig2AeUFMQhpsM8wFMD4sDHCFCTwMyDYA5gV0m2EBARMnGAYUG4BuI8xLuFwCCxOcsUCyAeheINZLcBeQawAAKWt8v8+oRp4AAAAASUVORK5CYII=");
+    public static readonly brick = new ResourceType("brick", "Brick", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAATklEQVQ4T2NkoBAwUqifAcOASfb2/0kxlHoGkGrz+bt3wQ6Fu4BsA5rV1Ejy871v31CCiHHUAIaBC4P5T56AkwDZLoAbQEq6x6aW4twIAMxxNu/5r5eTAAAAAElFTkSuQmCC");
+    //public static readonly junk = new ResourceType("junk", "Junk", "jk");
+
+    public static readonly allTypes: ResourceType[] = [ResourceType.dirt, /* ResourceType.junk, */ ResourceType.water, ResourceType.mud, ResourceType.brick];
 }
 

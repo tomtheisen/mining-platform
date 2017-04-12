@@ -34,6 +34,33 @@ input[type=radio]:checked + label {
     color: #933;
 }
 
+header {
+    position: relative;
+    overflow: hidden;
+    z-index: 1;
+    background-color: #334;
+    color: #ccc;
+}
+
+#header-top {
+    padding: .5em 2em;
+}
+
+#header-details {
+    margin: 0 2em;
+    max-height: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+    transition-duration: 200ms;
+    transition-property: all;
+}
+
+header:hover #header-details {
+    max-height: 50vh;
+    margin-top: .5em;
+    margin-bottom: 1em;
+}
+
 #cells {
     position: absolute;
     top: 0;
@@ -42,15 +69,6 @@ input[type=radio]:checked + label {
     width: 100vw;
     height: 100vh;
     overflow: auto;
-}
-
-#game-info {
-    position: relative;
-    z-index: 1;
-    margin: 0;
-    padding: .5em 2em;
-    background-color: #334;
-    color: #ccc;
 }
 
 .cell {
@@ -145,12 +163,15 @@ ul.machines > li:empty::before {
     content: '\a0';
 }
 
+img.resource {
+    vertical-align: bottom;
+}
+
 .resources > * {
     display: inline-block;
 
-    background-color: #226;
+    background-color: #ffe;
     border-radius: 1em;
-    color: #ddd;
     padding-left: .4em;
     padding-right: .4em;
     margin-right: .5em;

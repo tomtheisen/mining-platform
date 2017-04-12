@@ -115,7 +115,7 @@ abstract class PoweredCrafter extends Machine {
 
         this.addProgressBar();
         this.addMachineLink();
-        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.amountOut}${this.resourceOut.symbol} (${this.totalHours}h)`));
+        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.amountOut}`, this.resourceOut.img, ` (${this.totalHours}h)`));
         this.addDetails();
     }
 
@@ -209,7 +209,7 @@ class Shovel extends Machine {
 
         this.addProgressBar();
         this.addMachineLink();
-        this.element.appendChild(button({}, `+${this.dirtDug}${ResourceType.dirt.symbol}`));
+        this.element.appendChild(button({}, `+${this.dirtDug}`, ResourceType.dirt.img));
         this.addDetails();
 
         this.element.querySelector("button")!.addEventListener("click", ev => this.activate());
@@ -244,7 +244,7 @@ class AutoDirtSeller extends Machine {
         super(state, cell, element);
 
         this.addMachineLink();
-        this.element.appendChild(span({}, `-1${ResourceType.dirt.symbol} -${this.powerUse}🗲 +§${this.salePrice}`));
+        this.element.appendChild(span({}, `-1`, ResourceType.dirt.img, ` -${this.powerUse}🗲 +§${this.salePrice}`));
         this.addDetails();
     }
 
@@ -270,7 +270,7 @@ class DirtSeller extends Machine {
         super(state, cell, element);
 
         this.addMachineLink();
-        this.element.appendChild(button({}, `-1${ResourceType.dirt.symbol} +§${this.salePrice}`));
+        this.element.appendChild(button({}, `-1`, ResourceType.dirt.img, ` +§${this.salePrice}`));
         this.addDetails();
 
         this.element.querySelector("button")!.addEventListener("click", ev => {
