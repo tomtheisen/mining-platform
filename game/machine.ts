@@ -115,7 +115,7 @@ abstract class PoweredCrafter extends Machine {
 
         this.addProgressBar();
         this.addMachineLink();
-        this.element.appendChild(span({}, `-${this.powerUse}🗲 +${this.amountOut}`, this.resourceOut.img, ` (${this.totalHours}h)`));
+        this.element.appendChild(span({}, `-${this.powerUse}🗲 `, ...([] as (HTMLElement | string)[]).concat(...this.inputs.map(i => [` -${i.amount}`, i.type.img])), ` +${this.amountOut}`, this.resourceOut.img, ` (${this.totalHours}h)`));
         this.addDetails();
     }
 
@@ -342,7 +342,7 @@ class MudMixer extends PoweredCrafter {
 }
 
 class ElectricBrickKiln extends PoweredCrafter {
-    static readonly label = "Electric Brick Kiln";
+    static readonly label = "Electric Kiln";
     static basePrice = 300;
 
     constructor(state: IGameState, cell: ICell, element: HTMLElement) {

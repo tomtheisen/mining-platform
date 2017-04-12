@@ -1,6 +1,6 @@
 import { Cell, BuyPlaceHolder } from "cell";
 import { setText } from "domutil";
-import { IGameState, IMachineConstructorState } from "commontypes";
+import { IGameState, IMachineConstructorState, ResourceType } from "commontypes";
 import { MachineConstructor, allMachines } from "machine";
 import { returnOf, Subscriptions } from "util";
 
@@ -25,6 +25,36 @@ class MachineConstructorState implements IMachineConstructorState {
     }
 }
 
+class Objective {
+    name: string;
+    description: string;
+    props = new Subscriptions(this);
+    test: (state: IGameState) => boolean;
+
+    private _achieved = false;
+    get achieved() { return this._achieved; }
+    set achieved(value: boolean) {
+        this.props.publish("achieved", this._achieved = value);
+    }
+
+    private _visible = false;
+    get visible() { return this._visible; }
+    set visible(value: boolean) {
+        this.props.publish("visible", this._visible = value);
+    }
+
+    constructor(name: string, description: string, test: (state: IGameState) => boolean) {
+        this.name = name;
+        this.description = description;
+        this.test = test;
+    }
+
+    check(state: IGameState) {
+        if (this.test(state))  return this.achieved = true;
+        return false;
+    }
+}
+
 export default class GameState implements IGameState {
     readonly props = new Subscriptions<GameState>(this);
 
@@ -34,6 +64,9 @@ export default class GameState implements IGameState {
     cellPrice: number = 250;
     cells: Cell[][] = [];
     moneyHistory: number[] = [];
+    objectives: Objective[] = [];
+    currentObjective: number;
+
     private readonly historyLength = 24;
     private buyPlaceHolders: BuyPlaceHolder[] = [];
 
@@ -178,13 +211,24 @@ export default class GameState implements IGameState {
         rate = rate || 0;
         let rateFormatted = (rate >= 0 ? "+" : "-") + Math.abs(rate).toFixed(2);
         setText("#money-rate", rateFormatted);
+
+        let objective = this.objectives[this.currentObjective];
+        if (objective && objective.test(this)) {
+            console.log("completed", objective);
+            ++this.currentObjective;
+        }
     }
 
     reset() {
-        this.allCells().forEach(c => c.dispose());
+        this.objectives = [];
+        this.objectives.push(new Objective("Digger", "Have at least 10 dirt.", 
+            state => state.cells[0][0].getResource(ResourceType.dirt) >= 10));
+        this.currentObjective = 0;
 
         this.year = this.day = this.hour = 0;
         this.setMoney(1);
+
+        this.allCells().forEach(c => c.dispose());
         document.getElementById("cells")!.innerHTML = "";
 
         let cell1 = new Cell(this, this.newCellCapacity);
@@ -194,7 +238,6 @@ export default class GameState implements IGameState {
 
         this.cells = [
             [cell1],
-            // [cell2],
         ];
         this.renumberCells();
     }

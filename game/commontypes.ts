@@ -58,7 +58,7 @@ export class ResourceType {
         this.imgUrl = imgUrl;
     }
 
-    get img() { return domutil.img({class: "resource"}, this.imgUrl); }
+    get img() { return domutil.img({class: "resource", alt: this.name, title: this.name}, this.imgUrl); }
 
     public static readonly water = new ResourceType("water", "Water", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAuklEQVQ4T2NkQAMJmTn/0cWQ+QumT2FE5qNwQBJkGwDT+OTRI7AFX798BtPcPLwoDpKRkwPzYS6Bu4BsA2Aab167Cjb5kWkKmP7w9QeKzaKiomC+ytk5YBrmEkaKDXDx9gOHOszE1QyG+CKBIZThPFge5mJGqhkAsxbmElzOgNkMk4e7gGoGwAxCTwcwPrrLMFxAsgEwDbDAxGUzLEXC5I8f3A9OhPCUSLEBxLoEZjM8FtADhZBL0A0AAJNYhslSofbvAAAAAElFTkSuQmCC");
     public static readonly dirt = new ResourceType("dirt", "Dirt", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAbUlEQVQ4T2NkoBAwUqifYdQABtxhMClI7T8ogI/deQ0O5xWX3mMNL5yBSLYBEXqCYJutVETBNsNc8ODjHzD/xMPPKJZiuIBsA2BOhiUsmM2EXAJ3AdkGoAcWLhsV+FnAjoOFBcyljBQbMOCZCQChw1bXPI4PmAAAAABJRU5ErkJggg==");
